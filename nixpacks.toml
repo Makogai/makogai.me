@@ -15,12 +15,8 @@ cmds = [
   "php artisan view:cache"
 ]
 
-[phases.start]
-cmd = """
-php artisan migrate --force &&
-php artisan storage:link || true &&
-php artisan serve --host=0.0.0.0 --port=8080
-"""
+[start]
+cmd = "php artisan migrate --force && php artisan storage:link || true && php artisan serve --host=0.0.0.0 --port=8080"
 
 [variables]
 APP_ENV = "production"
