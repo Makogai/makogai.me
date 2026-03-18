@@ -13,19 +13,24 @@ WORKDIR /var/www
 
 COPY . .
 
+# install deps
 RUN composer install --no-dev --optimize-autoloader
 RUN npm install && npm run build
 
-RUN php artisan config:cache \
- && php artisan route:cache \
- && php artisan view:cache
-
 # permissions
-RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
+RUN chown -R www-data:www-data /var/www \
+ && chmod -R 775 storage bootstrap/cache
 
 # nginx config
 COPY docker/nginx.conf /etc/nginx/nginx.conf
 
 EXPOSE 80
 
-CMD service nginx start && php-fpm
+# 🔥 IMPORTANT: runtime setup
+CMD php artisan config:clear \
+ && php artisan route:clear \
+ && php artisan view:clear \
+ && php artisan migrate --force \
+ && php artisan storage:link || true \
+ && service nginx start \
+ && php-fpm -F
