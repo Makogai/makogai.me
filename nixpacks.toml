@@ -2,7 +2,7 @@
 nixPkgs = [
   "php84",
   "php84Packages.composer",
-  "nodejs-22_x"
+  "nodejs"
 ]
 
 [phases.install]
