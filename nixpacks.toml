@@ -2,7 +2,7 @@
 nixPkgs = [
   "php84",
   "php84Packages.composer",
-  "nodejs"
+  "nodejs-22_x"
 ]
 
 [phases.install]
@@ -19,10 +19,6 @@ cmds = [
   "php artisan view:cache"
 ]
 
-[start]
-cmd = "php artisan migrate --force && php artisan storage:link || true && php artisan serve --host=0.0.0.0 --port=8080"
-
 [variables]
 APP_ENV = "production"
 APP_DEBUG = "false"
-PORT = "8080"
