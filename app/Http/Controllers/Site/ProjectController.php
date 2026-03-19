@@ -94,10 +94,19 @@ class ProjectController extends Controller
         $related = Project::query()
             ->published()
             ->where('id', '!=', $project->id)
-            ->when(
-                $project->tech_stack,
-                fn ($q) => $q->whereJsonOverlap('tech_stack', $project->tech_stack),
-            )
+            ->when($project->tech_stack, function ($query) use ($project): void {
+                $techStack = array_values(array_filter((array) $project->tech_stack, fn ($tech) => is_string($tech) && $tech !== ''));
+
+                if ($techStack === []) {
+                    return;
+                }
+
+                $query->where(function ($techQuery) use ($techStack): void {
+                    foreach ($techStack as $tech) {
+                        $techQuery->orWhereJsonContains('tech_stack', $tech);
+                    }
+                });
+            })
             ->latest('published_at')
             ->limit(4)
             ->get([
