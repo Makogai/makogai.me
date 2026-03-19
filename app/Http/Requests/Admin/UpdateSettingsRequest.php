@@ -29,6 +29,9 @@ class UpdateSettingsRequest extends FormRequest
             'github_url' => ['nullable', 'url'],
             'linkedin_url' => ['nullable', 'url'],
             'x_url' => ['nullable', 'url'],
+            'default_seo_title' => ['nullable', 'string', 'max:120'],
+            'default_seo_description' => ['nullable', 'string', 'max:260'],
+            'default_og_image_path' => ['nullable', 'string', 'max:255'],
         ];
     }
 }

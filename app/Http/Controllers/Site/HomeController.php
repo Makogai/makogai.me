@@ -86,11 +86,22 @@ class HomeController extends Controller
                 'company_url',
             ]);
 
+        $siteSettings = $request->attributes->get('settings.site') ?? [];
+
+        $title = $siteSettings['default_seo_title'] ?? ($siteSettings['site_name'] ?? config('app.name'));
+        $description = $siteSettings['default_seo_description'] ?? ($siteSettings['tagline'] ?? null);
+
         return Inertia::render('site/Home', [
             'featuredProjects' => $featuredProjects,
             'latestPosts' => $latestPosts,
             'recentActivity' => $recentActivity,
             'experience' => $experience,
+            'meta' => [
+                'title' => $title,
+                'description' => $description,
+                'type' => 'website',
+                'image_path' => $siteSettings['default_og_image_path'] ?? null,
+            ],
         ]);
     }
 }

@@ -28,8 +28,19 @@ class BlogController extends Controller
             ])
             ->withQueryString();
 
+        $siteSettings = $request->attributes->get('settings.site') ?? [];
+
+        $title = $siteSettings['default_seo_title'] ?? ($siteSettings['site_name'] ?? config('app.name'));
+        $description = $siteSettings['default_seo_description'] ?? ($siteSettings['tagline'] ?? null);
+
         return Inertia::render('blog/Index', [
             'posts' => $posts,
+            'meta' => [
+                'title' => $title.' – Blog',
+                'description' => $description,
+                'type' => 'website',
+                'image_path' => $siteSettings['default_og_image_path'] ?? null,
+            ],
         ]);
     }
 
@@ -38,6 +49,11 @@ class BlogController extends Controller
         abort_unless($post->published_at && ! $post->archived_at, 404);
 
         $post->loadMissing(['category:id,name,slug', 'tags:id,name,slug']);
+
+        $siteSettings = request()->attributes->get('settings.site') ?? [];
+
+        $title = $post->seo_title ?: ($post->title.' – Blog');
+        $description = $post->seo_description ?: ($post->excerpt ?: ($siteSettings['default_seo_description'] ?? null));
 
         return Inertia::render('blog/Show', [
             'post' => $post->only([
@@ -55,6 +71,12 @@ class BlogController extends Controller
             ]) + [
                 'category' => $post->category,
                 'tags' => $post->tags,
+            ],
+            'meta' => [
+                'title' => $title,
+                'description' => $description,
+                'type' => 'article',
+                'image_path' => $post->cover_image_path ?: ($siteSettings['default_og_image_path'] ?? null),
             ],
         ]);
     }

@@ -42,6 +42,10 @@ class HandleInertiaRequests extends Middleware
         /** @var array<string, mixed> $profileSettings */
         $profileSettings = Setting::query()->where('key', 'profile')->value('value') ?? [];
 
+        // Make settings available to controllers via request attributes as well.
+        $request->attributes->set('settings.site', $siteSettings);
+        $request->attributes->set('settings.profile', $profileSettings);
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),

@@ -18,6 +18,9 @@ class SiteSettingsSeeder extends Seeder
             'github_url' => null,
             'linkedin_url' => null,
             'x_url' => null,
+            'default_seo_title' => 'Makogai — Full-stack developer & UI/UX',
+            'default_seo_description' => 'Personal portfolio & blog for Makogai — full-stack developer focused on product quality, performance, and premium UX.',
+            'default_og_image_path' => null,
         ];
 
         Setting::query()->updateOrCreate(

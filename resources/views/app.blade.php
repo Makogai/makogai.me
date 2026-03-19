@@ -31,7 +31,57 @@
             }
         </style>
 
-        <title inertia>{{ config('app.name', 'Laravel') }}</title>
+        @php
+            /** @var array<string, mixed> $page */
+            $page = $page ?? [];
+            $props = $page['props'] ?? [];
+            $settings = $props['settings']['site'] ?? [];
+            $meta = $props['meta'] ?? [];
+
+            $appName = config('app.name', 'Laravel');
+            $currentUrl = url()->current();
+
+            $title = $meta['title']
+                ?? $settings['default_seo_title']
+                ?? $settings['site_name']
+                ?? $appName;
+
+            $description = $meta['description']
+                ?? $settings['default_seo_description']
+                ?? ($settings['tagline'] ?? null);
+
+            $imagePath = $meta['image_path']
+                ?? $settings['default_og_image_path']
+                ?? null;
+            $imageUrl = $imagePath ? asset('storage/'.$imagePath) : asset('social-card.png');
+
+            $type = $meta['type'] ?? 'website';
+        @endphp
+
+        <title inertia>{{ $title }}</title>
+
+        @if($description)
+            <meta name="description" content="{{ $description }}">
+        @endif
+
+        <meta property="og:title" content="{{ $title }}">
+        @if($description)
+            <meta property="og:description" content="{{ $description }}">
+        @endif
+        <meta property="og:type" content="{{ $type }}">
+        <meta property="og:url" content="{{ $currentUrl }}">
+        @if($imageUrl)
+            <meta property="og:image" content="{{ $imageUrl }}">
+        @endif
+
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:title" content="{{ $title }}">
+        @if($description)
+            <meta name="twitter:description" content="{{ $description }}">
+        @endif
+        @if($imageUrl)
+            <meta name="twitter:image" content="{{ $imageUrl }}">
+        @endif
 
         <link rel="icon" href="/favicon.ico" sizes="any">
         <link rel="icon" href="/favicon.svg" type="image/svg+xml">

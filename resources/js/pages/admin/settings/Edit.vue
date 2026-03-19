@@ -32,6 +32,9 @@ const form = useForm({
     github_url: props.site.github_url ?? '',
     linkedin_url: props.site.linkedin_url ?? '',
     x_url: props.site.x_url ?? '',
+    default_seo_title: (props.site as any).default_seo_title ?? '',
+    default_seo_description: (props.site as any).default_seo_description ?? '',
+    default_og_image_path: (props.site as any).default_og_image_path ?? '',
 });
 
 const profileForm = useForm({
@@ -47,9 +50,9 @@ const mediaForm = useForm({
 });
 
 const pickOpen = ref(false);
-const pickTarget = ref<'portrait_light_path' | 'portrait_dark_path' | 'cover_path'>(
-    'portrait_light_path',
-);
+const pickTarget = ref<
+    'portrait_light_path' | 'portrait_dark_path' | 'cover_path' | 'default_og_image_path'
+>('portrait_light_path');
 
 const profileMediaPathsForm = useForm({
     portrait_light_path: props.profile.portrait_light_path,
@@ -94,11 +97,15 @@ function openPicker(target: typeof pickTarget.value) {
 }
 
 function onPick(item: { path: string }) {
+    if (pickTarget.value === 'default_og_image_path') {
+        form.default_og_image_path = item.path;
+        return;
+    }
+
     (profileMediaPathsForm as any)[pickTarget.value] = item.path;
     profileMediaPathsForm.put('/admin/settings/profile', {
         preserveScroll: true,
         onSuccess: () => {
-            // Keep local form in sync with saved server state
             const p = currentProfile.value;
             profileMediaPathsForm.portrait_light_path = p.portrait_light_path;
             profileMediaPathsForm.portrait_dark_path = p.portrait_dark_path;
@@ -191,6 +198,54 @@ const breadcrumbs: BreadcrumbItem[] = [
                             class="h-10 w-full rounded-xl border border-white/10 bg-white/5 px-3 text-sm ring-1 ring-white/10"
                         />
                     </div>
+                </div>
+
+                <div
+                    class="rounded-xl border border-sidebar-border/70 p-4 dark:border-sidebar-border"
+                >
+                    <label class="text-xs text-foreground/60">SEO defaults</label>
+                    <input
+                        v-model="form.default_seo_title"
+                        class="mt-2 h-10 w-full rounded-xl border border-white/10 bg-white/5 px-3 text-sm ring-1 ring-white/10"
+                        placeholder="Default SEO title (home / others)"
+                    />
+                    <input
+                        v-model="form.default_seo_description"
+                        class="mt-3 h-10 w-full rounded-xl border border-white/10 bg-white/5 px-3 text-sm ring-1 ring-white/10"
+                        placeholder="Default SEO description"
+                    />
+                    <input
+                        v-model="form.default_og_image_path"
+                        class="mt-3 h-10 w-full rounded-xl border border-white/10 bg-white/5 px-3 text-sm ring-1 ring-white/10"
+                        placeholder="media/your-social-image.webp"
+                    />
+                    <div class="mt-3 flex items-center gap-3">
+                        <div
+                            class="h-16 w-28 overflow-hidden rounded-xl border border-black/10 bg-white/70 ring-1 ring-black/10 dark:border-white/10 dark:bg-white/5 dark:ring-white/10"
+                        >
+                            <img
+                                v-if="form.default_og_image_path"
+                                :src="`/storage/${form.default_og_image_path}`"
+                                alt=""
+                                class="h-full w-full object-cover"
+                            />
+                        </div>
+                        <button
+                            type="button"
+                            class="glass-button px-3 py-2 text-xs"
+                            @click="openPicker('default_og_image_path')"
+                        >
+                            Pick from library
+                        </button>
+                        <a href="/admin/media" class="site-nav-link px-3 py-2 text-xs">
+                            Open library
+                        </a>
+                    </div>
+                    <p class="mt-2 text-xs text-foreground/60">
+                        Social image should be 1200×630 (or similar) and live in
+                        <span class="font-mono">storage</span>. You can pick a file in
+                        Media and paste its path here.
+                    </p>
                 </div>
 
                 <div class="flex items-center justify-end">
