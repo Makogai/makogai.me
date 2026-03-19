@@ -32,6 +32,9 @@ class UpdateSettingsRequest extends FormRequest
             'default_seo_title' => ['nullable', 'string', 'max:120'],
             'default_seo_description' => ['nullable', 'string', 'max:260'],
             'default_og_image_path' => ['nullable', 'string', 'max:255'],
+            'github_activity_username' => ['nullable', 'string', 'max:80'],
+            'github_activity_obfuscate' => ['nullable', 'boolean'],
+            'github_activity_delay_hours' => ['nullable', 'integer', 'min:0', 'max:168'],
         ];
     }
 }

@@ -124,6 +124,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('projects', AdminProjectController::class)->scoped([
             'project' => 'id',
         ]);
+        Route::post('activities/sync-github', [AdminActivityController::class, 'syncGithub'])
+            ->name('activities.sync-github');
         Route::resource('activities', AdminActivityController::class);
         Route::resource('experience', AdminExperienceController::class);
         Route::get('link-health', LinkHealthController::class)->name('link-health.index');

@@ -28,6 +28,9 @@ class SettingController extends Controller
                 'github_url' => null,
                 'linkedin_url' => null,
                 'x_url' => null,
+                'github_activity_username' => null,
+                'github_activity_obfuscate' => true,
+                'github_activity_delay_hours' => 0,
             ], $siteValue),
             'profile' => array_merge([
                 'full_name' => null,

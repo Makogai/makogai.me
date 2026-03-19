@@ -69,7 +69,7 @@ type Experience = {
     company_url: string | null;
 };
 
-defineProps<{
+const props = defineProps<{
     featuredProjects: Project[];
     latestPosts: Post[];
     recentActivity: Activity[];
@@ -166,6 +166,40 @@ function techLogoSvg(tech: string): string | null {
         '<svg width="16" height="16" fill="currentColor" ',
     );
 }
+
+function isoDate(value: Date): string {
+    const y = value.getFullYear();
+    const m = String(value.getMonth() + 1).padStart(2, '0');
+    const d = String(value.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+}
+
+const activityMiniDays = computed(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const counts = new Map<string, number>();
+    for (const item of props.recentActivity) {
+        const key = item.happened_at.slice(0, 10);
+        counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+
+    const days: Array<{ date: string; count: number }> = [];
+    for (let i = 27; i >= 0; i--) {
+        const d = new Date(today);
+        d.setDate(today.getDate() - i);
+        const key = isoDate(d);
+        days.push({ date: key, count: counts.get(key) ?? 0 });
+    }
+
+    const max = Math.max(1, ...days.map((d) => d.count));
+    return days.map((d) => {
+        const ratio = d.count / max;
+        const level =
+            d.count === 0 ? 0 : ratio < 0.34 ? 1 : ratio < 0.67 ? 2 : 3;
+        return { ...d, level };
+    });
+});
 </script>
 
 <template>
@@ -650,46 +684,69 @@ function techLogoSvg(tech: string): string | null {
                     </Link>
                 </div>
 
-                <div class="mt-4 grid gap-3">
-                    <div
-                        v-for="item in recentActivity"
-                        :key="item.id"
-                        class="flex flex-col gap-2 rounded-2xl border border-black/10 bg-white/70 p-5 ring-1 ring-black/10 backdrop-blur-xl sm:flex-row sm:items-start sm:justify-between dark:border-white/10 dark:bg-white/5 dark:ring-white/10"
-                    >
-                        <div>
-                            <div class="flex items-center gap-2">
+                <div
+                    class="mt-4 rounded-2xl border border-black/10 bg-white/70 p-4 ring-1 ring-black/10 backdrop-blur-xl dark:border-white/10 dark:bg-white/5 dark:ring-white/10 sm:p-5"
+                >
+                    <div class="flex items-center justify-between gap-3">
+                        <p class="text-xs font-medium uppercase tracking-[0.14em] text-foreground/55">
+                            Last 4 weeks
+                        </p>
+                        <p class="text-xs text-foreground/55">
+                            {{ recentActivity.length }} recent entries
+                        </p>
+                    </div>
+
+                    <div class="mt-3 flex flex-wrap gap-1.5">
+                        <div
+                            v-for="d in activityMiniDays"
+                            :key="d.date"
+                            class="h-3 w-3 rounded-[4px] ring-1 ring-black/10 transition-transform hover:scale-110 dark:ring-white/10"
+                            :class="
+                                d.level === 0
+                                    ? 'bg-black/[0.06] dark:bg-white/[0.07]'
+                                    : d.level === 1
+                                      ? 'bg-[linear-gradient(135deg,rgba(99,102,241,0.36),rgba(34,211,238,0.28))]'
+                                      : d.level === 2
+                                        ? 'bg-[linear-gradient(135deg,rgba(99,102,241,0.58),rgba(34,211,238,0.42))]'
+                                        : 'bg-[linear-gradient(135deg,rgba(99,102,241,0.86),rgba(34,211,238,0.72))]'
+                            "
+                            :title="`${d.date} • ${d.count} activities`"
+                        />
+                    </div>
+
+                    <div class="mt-4 grid gap-2 sm:grid-cols-3">
+                        <div
+                            v-for="item in recentActivity.slice(0, 3)"
+                            :key="item.id"
+                            class="group rounded-xl border border-black/10 bg-white/70 p-3 ring-1 ring-black/10 transition hover:bg-white/85 dark:border-white/10 dark:bg-white/5 dark:ring-white/10 dark:hover:bg-white/10"
+                        >
+                            <div class="flex items-center justify-between gap-2">
                                 <span
-                                    class="rounded-full bg-[linear-gradient(135deg,rgba(99,102,241,0.14),rgba(34,211,238,0.10))] px-2.5 py-1 text-xs text-foreground/80 ring-1 ring-black/10 dark:ring-white/10"
+                                    class="inline-flex rounded-full bg-[linear-gradient(135deg,rgba(99,102,241,0.14),rgba(34,211,238,0.10))] px-2 py-0.5 text-[0.68rem] font-medium text-foreground/85 ring-1 ring-black/10 dark:ring-white/10"
                                 >
                                     {{ item.type }}
                                 </span>
-                                <p class="font-medium tracking-tight">
-                                    {{ item.title }}
-                                </p>
+                                <span class="text-[0.68rem] text-foreground/55">
+                                    {{ new Date(item.happened_at).toLocaleDateString() }}
+                                </span>
                             </div>
+
+                            <p class="mt-2 line-clamp-1 text-sm font-medium tracking-tight">
+                                {{ item.title }}
+                            </p>
                             <p
                                 v-if="item.description"
-                                class="mt-2 text-sm text-foreground/65"
+                                class="mt-1 line-clamp-2 text-xs leading-relaxed text-foreground/65"
                             >
                                 {{ item.description }}
                             </p>
-                        </div>
-                        <div
-                            class="flex items-center justify-between gap-3 sm:flex-col sm:items-end"
-                        >
-                            <span class="text-xs text-foreground/55">
-                                {{
-                                    new Date(
-                                        item.happened_at,
-                                    ).toLocaleDateString()
-                                }}
-                            </span>
+
                             <a
                                 v-if="item.url"
                                 :href="item.url"
                                 target="_blank"
                                 rel="noreferrer"
-                                class="text-xs text-foreground/70 hover:text-foreground"
+                                class="mt-2 inline-flex text-xs text-foreground/70 transition group-hover:text-foreground"
                             >
                                 Open →
                             </a>

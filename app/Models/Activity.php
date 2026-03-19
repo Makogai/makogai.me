@@ -13,6 +13,18 @@ class Activity extends Model
     /** @use HasFactory<ActivityFactory> */
     use HasFactory, SoftDeletes;
 
+    protected $fillable = [
+        'user_id',
+        'source',
+        'external_id',
+        'type',
+        'title',
+        'description',
+        'happened_at',
+        'url',
+        'meta',
+    ];
+
     /**
      * @return BelongsTo<User, $this>
      */

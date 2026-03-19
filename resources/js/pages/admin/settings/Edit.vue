@@ -35,6 +35,11 @@ const form = useForm({
     default_seo_title: (props.site as any).default_seo_title ?? '',
     default_seo_description: (props.site as any).default_seo_description ?? '',
     default_og_image_path: (props.site as any).default_og_image_path ?? '',
+    github_activity_username: (props.site as any).github_activity_username ?? '',
+    github_activity_obfuscate:
+        (props.site as any).github_activity_obfuscate ?? true,
+    github_activity_delay_hours:
+        (props.site as any).github_activity_delay_hours ?? 0,
 });
 
 const profileForm = useForm({
@@ -245,6 +250,46 @@ const breadcrumbs: BreadcrumbItem[] = [
                         Social image should be 1200×630 (or similar) and live in
                         <span class="font-mono">storage</span>. You can pick a file in
                         Media and paste its path here.
+                    </p>
+                </div>
+
+                <div
+                    class="rounded-xl border border-sidebar-border/70 p-4 dark:border-sidebar-border"
+                >
+                    <label class="text-xs text-foreground/60"
+                        >GitHub activity sync</label
+                    >
+                    <input
+                        v-model="form.github_activity_username"
+                        class="mt-2 h-10 w-full rounded-xl border border-white/10 bg-white/5 px-3 text-sm ring-1 ring-white/10"
+                        placeholder="GitHub username"
+                    />
+                    <div class="mt-3 grid gap-3 sm:grid-cols-2">
+                        <label class="inline-flex items-center gap-2 text-sm">
+                            <input
+                                v-model="form.github_activity_obfuscate"
+                                type="checkbox"
+                                class="accent-white"
+                            />
+                            Obfuscate repo/details on public feed
+                        </label>
+                        <div>
+                            <label class="text-xs text-foreground/60"
+                                >Publish delay (hours)</label
+                            >
+                            <input
+                                v-model.number="form.github_activity_delay_hours"
+                                type="number"
+                                min="0"
+                                max="168"
+                                class="mt-1 h-10 w-full rounded-xl border border-white/10 bg-white/5 px-3 text-sm ring-1 ring-white/10"
+                            />
+                        </div>
+                    </div>
+                    <p class="mt-2 text-xs text-foreground/60">
+                        Runs hourly via scheduler. Set
+                        <span class="font-mono">GITHUB_ACTIVITY_TOKEN</span> in
+                        env for higher API limits.
                     </p>
                 </div>
 

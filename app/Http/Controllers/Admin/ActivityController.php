@@ -7,6 +7,8 @@ use App\Http\Requests\Admin\StoreActivityRequest;
 use App\Http\Requests\Admin\UpdateActivityRequest;
 use App\Models\Activity;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -102,5 +104,14 @@ class ActivityController extends Controller
         $activity->delete();
 
         return to_route('admin.activities.index');
+    }
+
+    public function syncGithub(Request $request): RedirectResponse
+    {
+        Artisan::call('activity:sync-github', [
+            '--limit' => 60,
+        ]);
+
+        return back()->with('success', 'GitHub activity synced successfully.');
     }
 }

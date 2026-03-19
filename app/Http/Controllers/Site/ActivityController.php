@@ -16,11 +16,16 @@ class ActivityController extends Controller
         $end = CarbonImmutable::now()->startOfDay();
         $start = $end->subDays(140);
 
+        $siteSettings = $request->attributes->get('settings.site') ?? [];
+        $githubOnly = (bool) ($siteSettings['github_activity_username'] ?? false);
+
         $activities = Activity::query()
+            ->when($githubOnly, fn ($q) => $q->where('source', 'github'))
             ->whereBetween('happened_at', [$start->toDateString(), $end->toDateString()])
             ->orderByDesc('happened_at')
             ->get([
                 'id',
+                'source',
                 'type',
                 'title',
                 'description',

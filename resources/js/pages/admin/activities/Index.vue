@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
+import { ref } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 
@@ -20,6 +21,26 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Admin', href: '/admin' },
     { title: 'Activities', href: '/admin/activities' },
 ];
+
+const syncing = ref(false);
+
+function syncNow(): void {
+    if (syncing.value) {
+        return;
+    }
+
+    syncing.value = true;
+    router.post(
+        '/admin/activities/sync-github',
+        {},
+        {
+            preserveScroll: true,
+            onFinish: () => {
+                syncing.value = false;
+            },
+        },
+    );
+}
 </script>
 
 <template>
@@ -36,9 +57,19 @@ const breadcrumbs: BreadcrumbItem[] = [
                         Commit-style timeline entries.
                     </p>
                 </div>
-                <Link href="/admin/activities/create" class="glass-button">
-                    New activity
-                </Link>
+                <div class="flex items-center gap-2">
+                    <button
+                        type="button"
+                        class="site-nav-link px-4 py-2 text-sm"
+                        :disabled="syncing"
+                        @click="syncNow"
+                    >
+                        {{ syncing ? 'Syncing…' : 'Sync GitHub now' }}
+                    </button>
+                    <Link href="/admin/activities/create" class="glass-button">
+                        New activity
+                    </Link>
+                </div>
             </div>
 
             <div
