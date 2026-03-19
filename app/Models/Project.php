@@ -15,7 +15,7 @@ class Project extends Model
     /** @use HasFactory<ProjectFactory> */
     use HasFactory, SoftDeletes;
 
-    #[Fillable([
+    protected $fillable = [
         'user_id',
         'title',
         'slug',
@@ -32,9 +32,7 @@ class Project extends Model
         'archived_at',
         'seo_title',
         'seo_description',
-    ])]
-    protected $fillable;
-
+    ];
     /**
      * @return BelongsTo<User, $this>
      */
