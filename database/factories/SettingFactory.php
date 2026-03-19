@@ -18,8 +18,8 @@ class SettingFactory extends Factory
     public function definition(): array
     {
         return [
-            'key' => fake()->unique()->slug(2),
-            'value' => ['value' => fake()->sentence()],
+            'key' => $this->faker->unique()->slug(2),
+            'value' => ['value' => $this->faker->sentence()],
         ];
     }
 }

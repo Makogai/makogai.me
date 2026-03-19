@@ -33,8 +33,10 @@ EXPOSE 80
 CMD php artisan config:clear \
  && php artisan route:clear \
  && php artisan view:clear \
+ && php artisan storage:link || true \
+ && php artisan storage:link --relative || true \
+ && chown -R www-data:www-data /var/www/storage /var/www/public/storage || true \
  && php artisan migrate --force \
  && php artisan db:seed --force \
- && php artisan storage:link || true \
  && service nginx start \
  && php-fpm -F

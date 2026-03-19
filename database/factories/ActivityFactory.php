@@ -20,11 +20,11 @@ class ActivityFactory extends Factory
     {
         return [
             'user_id' => User::factory(),
-            'type' => fake()->randomElement(['feature', 'fix', 'idea']),
-            'title' => fake()->sentence(6),
-            'description' => fake()->optional()->sentence(14),
-            'happened_at' => fake()->dateTimeBetween('-120 days', 'now')->format('Y-m-d'),
-            'url' => fake()->optional(0.2)->url(),
+            'type' => $this->faker->randomElement(['feature', 'fix', 'idea']),
+            'title' => $this->faker->sentence(6),
+            'description' => $this->faker->optional()->sentence(14),
+            'happened_at' => $this->faker->dateTimeBetween('-120 days', 'now')->format('Y-m-d'),
+            'url' => $this->faker->optional(0.2)->url(),
             'meta' => [],
         ];
     }

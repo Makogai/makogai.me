@@ -18,25 +18,25 @@ class ProjectFactory extends Factory
      */
     public function definition(): array
     {
-        $title = fake()->unique()->words(3, true);
+        $title = $this->faker->unique()->words(3, true);
         $markdown = implode("\n\n", [
             "# {$title}",
-            fake()->paragraphs(2, true),
+            $this->faker->paragraphs(2, true),
             '## Highlights',
-            '- '.fake()->sentence(),
-            '- '.fake()->sentence(),
+            '- '.$this->faker->sentence(),
+            '- '.$this->faker->sentence(),
         ]);
 
         return [
             'user_id' => User::factory(),
             'title' => ucfirst($title),
             'slug' => null,
-            'description' => fake()->sentence(18),
+            'description' => $this->faker->sentence(18),
             'content_markdown' => $markdown,
             'content_html' => null,
             'cover_image_path' => null,
             'gallery' => [],
-            'tech_stack' => fake()->randomElements(
+            'tech_stack' => $this->faker->randomElements(
                 ['Laravel', 'Vue', 'Inertia', 'Tailwind', 'MySQL', 'Redis', 'Docker'],
                 rand(3, 6),
             ),

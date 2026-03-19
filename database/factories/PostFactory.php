@@ -19,13 +19,13 @@ class PostFactory extends Factory
      */
     public function definition(): array
     {
-        $title = fake()->unique()->sentence(rand(4, 7));
+        $title = $this->faker->unique()->sentence(rand(4, 7));
         $markdown = implode("\n\n", [
             "# {$title}",
-            fake()->paragraphs(2, true),
+            $this->faker->paragraphs(2, true),
             '## Notes',
-            '- '.fake()->sentence(),
-            '- '.fake()->sentence(),
+            '- '.$this->faker->sentence(),
+            '- '.$this->faker->sentence(),
             "```php\n".'<?php'."\n\necho 'hello world';\n```",
         ]);
 
