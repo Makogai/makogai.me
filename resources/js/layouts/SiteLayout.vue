@@ -165,8 +165,7 @@ const gridMaskStyle = {
                 class="mx-auto flex max-w-6xl items-center justify-between px-4 py-10 text-sm text-muted-foreground sm:px-6"
             >
                 <p>
-                    © {{ new Date().getFullYear() }} {{ brandName }}. Built with
-                    Laravel + Inertia + Vue.
+                    © {{ new Date().getFullYear() }} {{ brandName }}. Built with hate 💖
                 </p>
                 <div class="flex items-center gap-3">
                     <a
