@@ -328,5 +328,30 @@ function submit() {
                 </div>
             </form>
         </div>
+
+        <div
+            class="fixed bottom-4 right-4 z-30 sm:bottom-6 sm:right-6"
+        >
+            <div
+                class="inline-flex flex-col gap-2 rounded-2xl border border-black/10 bg-white/90 p-2 ring-1 ring-black/10 shadow-lg backdrop-blur-xl dark:border-white/10 dark:bg-black/55 dark:ring-white/10"
+            >
+                <button
+                    type="button"
+                    class="glass-button min-w-[7rem] justify-center"
+                    :disabled="form.processing"
+                    @click="submit"
+                >
+                    {{ form.processing ? 'Saving…' : 'Save' }}
+                </button>
+                <button
+                    v-if="isEdit"
+                    type="button"
+                    class="site-nav-link min-w-[7rem] justify-center text-red-600 hover:text-red-700 dark:text-red-300 dark:hover:text-red-200"
+                    @click="form.delete(`/admin/projects/${props.project!.id}`)"
+                >
+                    Delete
+                </button>
+            </div>
+        </div>
     </AppLayout>
 </template>

@@ -6,6 +6,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 import { useCsrfToken } from '@/composables/useCsrfToken';
 import MediaPickerDialog from '@/components/admin/MediaPickerDialog.vue';
+import { ImagePlus, Upload } from 'lucide-vue-next';
 
 type Category = { id: number; name: string };
 type Tag = { id: number; name: string };
@@ -91,7 +92,11 @@ const coverPreview = computed(() => {
     return form.cover_image_path ? `/storage/${form.cover_image_path}` : null;
 });
 
-const mediaPickerOpen = ref(false);
+const coverMediaPickerOpen = ref(false);
+const editorMediaPickerOpen = ref(false);
+const editorUploading = ref(false);
+const markdownTextarea = ref<HTMLTextAreaElement | null>(null);
+const uploadInput = ref<HTMLInputElement | null>(null);
 
 const previewHtml = ref<string>('');
 const previewLoading = ref(false);
@@ -142,6 +147,71 @@ function submit() {
         return;
     }
     form.post('/admin/posts', { forceFormData: true });
+}
+
+function insertMarkdownAtCursor(snippet: string): void {
+    const textarea = markdownTextarea.value;
+    if (!textarea) {
+        form.content_markdown = `${form.content_markdown}\n${snippet}`;
+        return;
+    }
+
+    const start = textarea.selectionStart ?? form.content_markdown.length;
+    const end = textarea.selectionEnd ?? form.content_markdown.length;
+    const current = form.content_markdown ?? '';
+    form.content_markdown = `${current.slice(0, start)}${snippet}${current.slice(end)}`;
+
+    requestAnimationFrame(() => {
+        textarea.focus();
+        const pos = start + snippet.length;
+        textarea.setSelectionRange(pos, pos);
+    });
+}
+
+function onSelectEditorMedia(item: { path: string; alt?: string | null }): void {
+    if (!item.path) {
+        return;
+    }
+    const alt = (item.alt ?? '').trim() || 'image';
+    insertMarkdownAtCursor(`![${alt}](/storage/${item.path})`);
+}
+
+async function onUploadEditorMedia(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) {
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('alt', file.name.replace(/\.[^.]+$/, ''));
+
+    editorUploading.value = true;
+    try {
+        const res = await fetch('/admin/media', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': token.value,
+                Accept: 'application/json',
+            },
+            body: formData,
+        });
+        if (!res.ok) {
+            return;
+        }
+        const json = (await res.json()) as { path?: string; alt?: string | null };
+        if (json.path) {
+            onSelectEditorMedia({ path: json.path, alt: json.alt });
+        }
+    } finally {
+        editorUploading.value = false;
+        if (uploadInput.value) {
+            uploadInput.value.value = '';
+        }
+    }
 }
 </script>
 
@@ -277,7 +347,7 @@ function submit() {
                             <button
                                 type="button"
                                 class="glass-button px-3 py-2 text-xs"
-                                @click="mediaPickerOpen = true"
+                                @click="coverMediaPickerOpen = true"
                             >
                                 Pick from library
                             </button>
@@ -394,10 +464,45 @@ function submit() {
                             </span>
                         </div>
                         <textarea
+                            ref="markdownTextarea"
                             v-model="form.content_markdown"
                             rows="14"
                             class="mt-2 w-full resize-y rounded-xl border border-white/10 bg-white/5 p-3 font-mono text-xs text-foreground ring-1 ring-white/10 focus:ring-2 focus:ring-white/15 focus:outline-none"
                         />
+                        <div class="sticky bottom-3 z-10 mt-3 flex justify-end">
+                            <div
+                                class="inline-flex items-center gap-2 rounded-2xl border border-black/10 bg-white/85 p-2 text-xs ring-1 ring-black/10 backdrop-blur-xl dark:border-white/10 dark:bg-white/10 dark:ring-white/10"
+                            >
+                                <button
+                                    type="button"
+                                    class="glass-button px-3 py-1.5 text-xs"
+                                    @click="editorMediaPickerOpen = true"
+                                >
+                                    <ImagePlus class="h-3.5 w-3.5" />
+                                    Image
+                                </button>
+                                <button
+                                    type="button"
+                                    class="glass-button px-3 py-1.5 text-xs"
+                                    :disabled="editorUploading"
+                                    @click="uploadInput?.click()"
+                                >
+                                    <Upload class="h-3.5 w-3.5" />
+                                    {{
+                                        editorUploading
+                                            ? 'Uploading...'
+                                            : 'Upload'
+                                    }}
+                                </button>
+                                <input
+                                    ref="uploadInput"
+                                    type="file"
+                                    accept="image/*"
+                                    class="hidden"
+                                    @change="onUploadEditorMedia"
+                                />
+                            </div>
+                        </div>
                         <div
                             v-if="form.errors.content_markdown"
                             class="mt-2 text-xs text-red-400"
@@ -456,8 +561,33 @@ function submit() {
             </form>
         </div>
 
+        <div
+            class="fixed bottom-4 right-4 z-30 sm:bottom-6 sm:right-6"
+        >
+            <div
+                class="inline-flex flex-col gap-2 rounded-2xl border border-black/10 bg-white/90 p-2 ring-1 ring-black/10 shadow-lg backdrop-blur-xl dark:border-white/10 dark:bg-black/55 dark:ring-white/10"
+            >
+                <button
+                    type="button"
+                    class="glass-button min-w-[7rem] justify-center"
+                    :disabled="form.processing"
+                    @click="submit"
+                >
+                    {{ form.processing ? 'Saving…' : 'Save' }}
+                </button>
+                <button
+                    v-if="isEdit"
+                    type="button"
+                    class="site-nav-link min-w-[7rem] justify-center text-red-600 hover:text-red-700 dark:text-red-300 dark:hover:text-red-200"
+                    @click="form.delete(`/admin/posts/${props.post!.id}`)"
+                >
+                    Delete
+                </button>
+            </div>
+        </div>
+
         <MediaPickerDialog
-            v-model:open="mediaPickerOpen"
+            v-model:open="coverMediaPickerOpen"
             @select="
                 (m) => {
                     if (m.path) {
@@ -466,6 +596,10 @@ function submit() {
                     }
                 }
             "
+        />
+        <MediaPickerDialog
+            v-model:open="editorMediaPickerOpen"
+            @select="onSelectEditorMedia"
         />
     </AppLayout>
 </template>

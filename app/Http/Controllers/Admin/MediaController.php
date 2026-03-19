@@ -44,14 +44,23 @@ class MediaController extends Controller
         ]);
     }
 
-    public function store(StoreMediaRequest $request): RedirectResponse
+    public function store(StoreMediaRequest $request): RedirectResponse|JsonResponse
     {
-        $this->library->storeImage(
+        $media = $this->library->storeImage(
             $request->file('file'),
             userId: $request->user()?->getKey(),
             collection: 'library',
             alt: $request->validated('alt'),
         );
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'id' => $media->id,
+                'path' => $media->path,
+                'alt' => $media->alt,
+                'url' => $media->disk === 'public' ? "/storage/{$media->path}" : null,
+            ]);
+        }
 
         return back();
     }

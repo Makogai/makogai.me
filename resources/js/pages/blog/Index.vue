@@ -48,6 +48,51 @@ const search = computed({
         );
     },
 });
+
+const categoryOptions = computed(() => {
+    const map = new Map<string, { name: string; slug: string }>();
+    for (const post of props.posts.data) {
+        if (post.category?.slug && post.category?.name) {
+            map.set(post.category.slug, {
+                name: post.category.name,
+                slug: post.category.slug,
+            });
+        }
+    }
+
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+});
+
+const tagOptions = computed(() => {
+    const map = new Map<string, { name: string; slug: string }>();
+    for (const post of props.posts.data) {
+        for (const tag of post.tags ?? []) {
+            if (tag.slug && tag.name) {
+                map.set(tag.slug, { name: tag.name, slug: tag.slug });
+            }
+        }
+    }
+
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+});
+
+function applyFilter(partial: { category?: string; tag?: string; q?: string }) {
+    const hasCategory = Object.prototype.hasOwnProperty.call(partial, 'category');
+    const hasTag = Object.prototype.hasOwnProperty.call(partial, 'tag');
+    const hasQ = Object.prototype.hasOwnProperty.call(partial, 'q');
+
+    router.get(
+        '/blog',
+        {
+            q: hasQ ? partial.q || undefined : props.filters?.q || undefined,
+            category: hasCategory
+                ? partial.category || undefined
+                : props.filters?.category || undefined,
+            tag: hasTag ? partial.tag || undefined : props.filters?.tag || undefined,
+        },
+        { preserveState: true, replace: true },
+    );
+}
 </script>
 
 <template>
@@ -78,6 +123,89 @@ const search = computed({
                         class="h-10 w-full rounded-xl border border-black/10 bg-white/80 px-3 text-sm text-foreground ring-1 ring-black/10 backdrop-blur-xl placeholder:text-foreground/40 focus:ring-2 focus:ring-black/20 focus:outline-none dark:border-white/10 dark:bg-white/5 dark:ring-white/10 dark:focus:ring-white/15"
                     />
                 </div>
+
+                <div class="mt-3 flex items-center gap-2">
+                    <button
+                        v-if="filters?.q || filters?.category || filters?.tag"
+                        type="button"
+                        class="site-nav-link px-3 py-1.5 text-xs"
+                        @click="applyFilter({ q: '', category: '', tag: '' })"
+                    >
+                        Clear all filters
+                    </button>
+                    <span
+                        v-if="filters?.category || filters?.tag"
+                        class="text-xs text-foreground/55"
+                    >
+                        Active:
+                        <span v-if="filters?.category">category</span>
+                        <span v-if="filters?.category && filters?.tag"> + </span>
+                        <span v-if="filters?.tag">tag</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4 grid gap-3">
+            <div
+                v-if="categoryOptions.length"
+                class="flex flex-wrap items-center gap-2"
+            >
+                <button
+                    type="button"
+                    class="site-nav-link px-3 py-1.5 text-xs"
+                    :class="
+                        !filters?.category
+                            ? 'bg-black/5 text-foreground ring-1 ring-black/10 dark:bg-white/10 dark:ring-white/10'
+                            : ''
+                    "
+                    @click="applyFilter({ category: undefined })"
+                >
+                    All categories
+                </button>
+                <button
+                    v-for="category in categoryOptions"
+                    :key="category.slug"
+                    type="button"
+                    class="site-nav-link px-3 py-1.5 text-xs"
+                    :class="
+                        filters?.category === category.slug
+                            ? 'bg-black/5 text-foreground ring-1 ring-black/10 dark:bg-white/10 dark:ring-white/10'
+                            : ''
+                    "
+                    @click="applyFilter({ category: category.slug })"
+                >
+                    {{ category.name }}
+                </button>
+            </div>
+
+            <div v-if="tagOptions.length" class="flex flex-wrap items-center gap-2">
+                <button
+                    type="button"
+                    class="site-nav-link px-3 py-1.5 text-xs"
+                    :class="
+                        !filters?.tag
+                            ? 'bg-black/5 text-foreground ring-1 ring-black/10 dark:bg-white/10 dark:ring-white/10'
+                            : ''
+                    "
+                    @click="applyFilter({ tag: undefined })"
+                >
+                    All tags
+                </button>
+                <button
+                    v-for="tag in tagOptions"
+                    :key="tag.slug"
+                    type="button"
+                    class="site-nav-link px-3 py-1.5 text-xs"
+                    :class="
+                        filters?.tag === tag.slug
+                            ? 'bg-black/5 text-foreground ring-1 ring-black/10 dark:bg-white/10 dark:ring-white/10'
+                            : ''
+                    "
+                    @click="applyFilter({ tag: tag.slug })"
+                >
+                    #{{ tag.name }}
+                </button>
             </div>
         </div>
 

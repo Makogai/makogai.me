@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
 import SiteLayout from '@/layouts/SiteLayout.vue';
 import * as simpleIcons from 'simple-icons';
+import { Copy, Linkedin, Share2 } from 'lucide-vue-next';
 import {
     Braces,
     Code,
@@ -41,6 +43,49 @@ const props = defineProps<{
     project: Project;
     related?: RelatedProject[];
 }>();
+
+const page = usePage();
+const shareCopied = ref(false);
+const shareUrl = computed(() => {
+    if (typeof window !== 'undefined' && window.location?.href) {
+        return window.location.href;
+    }
+    return page.url ? `${page.url}` : '';
+});
+const twitterShareUrl = computed(
+    () =>
+        `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl.value)}&text=${encodeURIComponent(props.project.title)}`,
+);
+const linkedinShareUrl = computed(
+    () =>
+        `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl.value)}`,
+);
+
+async function copyShareUrl(): Promise<void> {
+    try {
+        if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(shareUrl.value);
+        } else if (typeof document !== 'undefined') {
+            const textarea = document.createElement('textarea');
+            textarea.value = shareUrl.value;
+            textarea.setAttribute('readonly', 'true');
+            textarea.style.position = 'fixed';
+            textarea.style.top = '0';
+            textarea.style.left = '0';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+        }
+        shareCopied.value = true;
+        window.setTimeout(() => {
+            shareCopied.value = false;
+        }, 1200);
+    } catch {
+        // ignore
+    }
+}
 
 function techIcon(tech: string) {
     const t = tech.toLowerCase();
@@ -146,6 +191,35 @@ function techLogoSvg(tech: string): string | null {
                 >
                     {{ project.description }}
                 </p>
+
+                <div class="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                    <button
+                        type="button"
+                        class="inline-flex items-center gap-1.5 rounded-full border border-black/12 bg-white/85 px-3 py-1.5 text-xs font-medium text-foreground/80 ring-1 ring-black/10 transition hover:bg-white dark:border-white/12 dark:bg-white/8 dark:text-foreground/85 dark:ring-white/10 dark:hover:bg-white/12"
+                        @click="copyShareUrl"
+                    >
+                        <Copy class="h-3.5 w-3.5" />
+                        {{ shareCopied ? 'Link copied' : 'Copy link' }}
+                    </button>
+                    <a
+                        :href="twitterShareUrl"
+                        target="_blank"
+                        rel="noreferrer"
+                        class="inline-flex items-center gap-1.5 rounded-full border border-black/12 bg-white/85 px-3 py-1.5 text-xs font-medium text-foreground/80 ring-1 ring-black/10 transition hover:bg-white dark:border-white/12 dark:bg-white/8 dark:text-foreground/85 dark:ring-white/10 dark:hover:bg-white/12"
+                    >
+                        <Share2 class="h-3.5 w-3.5" />
+                        Share on X
+                    </a>
+                    <a
+                        :href="linkedinShareUrl"
+                        target="_blank"
+                        rel="noreferrer"
+                        class="inline-flex items-center gap-1.5 rounded-full border border-black/12 bg-white/85 px-3 py-1.5 text-xs font-medium text-foreground/80 ring-1 ring-black/10 transition hover:bg-white dark:border-white/12 dark:bg-white/8 dark:text-foreground/85 dark:ring-white/10 dark:hover:bg-white/12"
+                    >
+                        <Linkedin class="h-3.5 w-3.5" />
+                        Share on LinkedIn
+                    </a>
+                </div>
 
                 <div
                     v-if="project.tech_stack?.length"

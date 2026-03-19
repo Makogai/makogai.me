@@ -2,6 +2,7 @@
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed, nextTick, onMounted, ref, toRefs, watch } from 'vue';
 import SiteLayout from '@/layouts/SiteLayout.vue';
+import { Copy, Linkedin, Share2 } from 'lucide-vue-next';
 
 type Tag = { id: number; name: string; slug: string };
 type Category = { id: number; name: string; slug: string } | null;
@@ -319,25 +320,28 @@ watch(
                 <div class="mt-3 flex flex-wrap items-center gap-2 text-xs">
                     <button
                         type="button"
-                        class="site-nav-link px-3 py-1.5 text-xs"
+                        class="inline-flex items-center gap-1.5 rounded-full border border-black/12 bg-white/85 px-3 py-1.5 text-xs font-medium text-foreground/80 ring-1 ring-black/10 transition hover:bg-white dark:border-white/12 dark:bg-white/8 dark:text-foreground/85 dark:ring-white/10 dark:hover:bg-white/12"
                         @click="copyShareUrl"
                     >
+                        <Copy class="h-3.5 w-3.5" />
                         {{ shareCopied ? 'Link copied' : 'Copy link' }}
                     </button>
                     <a
                         :href="twitterShareUrl"
                         target="_blank"
                         rel="noreferrer"
-                        class="site-nav-link px-3 py-1.5 text-xs"
+                        class="inline-flex items-center gap-1.5 rounded-full border border-black/12 bg-white/85 px-3 py-1.5 text-xs font-medium text-foreground/80 ring-1 ring-black/10 transition hover:bg-white dark:border-white/12 dark:bg-white/8 dark:text-foreground/85 dark:ring-white/10 dark:hover:bg-white/12"
                     >
+                        <Share2 class="h-3.5 w-3.5" />
                         Share on X
                     </a>
                     <a
                         :href="linkedinShareUrl"
                         target="_blank"
                         rel="noreferrer"
-                        class="site-nav-link px-3 py-1.5 text-xs"
+                        class="inline-flex items-center gap-1.5 rounded-full border border-black/12 bg-white/85 px-3 py-1.5 text-xs font-medium text-foreground/80 ring-1 ring-black/10 transition hover:bg-white dark:border-white/12 dark:bg-white/8 dark:text-foreground/85 dark:ring-white/10 dark:hover:bg-white/12"
                     >
+                        <Linkedin class="h-3.5 w-3.5" />
                         Share on LinkedIn
                     </a>
                 </div>
