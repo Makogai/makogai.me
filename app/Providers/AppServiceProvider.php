@@ -29,6 +29,10 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureDefaults();
 
+        if (config('app.env') === 'production') {
+            URL::forceScheme('https');
+        }
+
         Post::observe(PostObserver::class);
         Project::observe(ProjectObserver::class);
     }
