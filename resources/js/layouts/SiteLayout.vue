@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { Menu, Moon, Sun, X } from 'lucide-vue-next';
+import { computed, ref, watch } from 'vue';
 import { useAppearance } from '@/composables/useAppearance';
 import CursorGlow from '@/components/site/CursorGlow.vue';
 
 const { resolvedAppearance, updateAppearance } = useAppearance();
 const page = usePage();
+const mobileMenuOpen = ref(false);
 
 const isDark = computed(() => resolvedAppearance.value === 'dark');
 const brandName = computed(
@@ -30,6 +32,21 @@ const socials = computed(() => {
 function toggleTheme() {
     updateAppearance(isDark.value ? 'light' : 'dark');
 }
+
+function toggleMobileMenu() {
+    mobileMenuOpen.value = !mobileMenuOpen.value;
+}
+
+function closeMobileMenu() {
+    mobileMenuOpen.value = false;
+}
+
+watch(
+    () => page.url,
+    () => {
+        closeMobileMenu();
+    },
+);
 
 const gridMaskStyle = {
     maskImage:
@@ -116,7 +133,7 @@ const gridMaskStyle = {
                     </span>
                 </Link>
 
-                <nav class="hidden items-center gap-1 sm:flex">
+                <nav class="hidden items-center gap-1 md:flex">
                     <Link class="site-nav-link" href="/">Home</Link>
                     <Link class="site-nav-link" href="/about">About</Link>
                     <Link class="site-nav-link" href="/projects">Projects</Link>
@@ -127,26 +144,59 @@ const gridMaskStyle = {
                 <div class="flex items-center gap-2">
                     <button
                         type="button"
-                        class="glass-button"
+                        class="glass-button h-9 w-9 justify-center p-0"
                         @click="toggleTheme"
                     >
                         <span class="sr-only">Toggle theme</span>
-                        <span class="text-xs font-medium">
-                            {{ isDark ? 'Dark' : 'Light' }}
-                        </span>
+                        <Sun v-if="isDark" class="h-4 w-4" />
+                        <Moon v-else class="h-4 w-4" />
                     </button>
 
-                    <Link
-                        v-if="$page.props.auth.user"
-                        href="/admin"
-                        class="glass-button"
+                    <button
+                        type="button"
+                        class="glass-button h-9 w-9 justify-center p-0 md:hidden"
+                        @click="toggleMobileMenu"
                     >
-                        Admin
-                    </Link>
-                    <Link v-else href="/login" class="glass-button">
-                        Sign in
-                    </Link>
+                        <span class="sr-only">Toggle navigation menu</span>
+                        <X v-if="mobileMenuOpen" class="h-4 w-4" />
+                        <Menu v-else class="h-4 w-4" />
+                    </button>
                 </div>
+            </div>
+
+            <div
+                v-if="mobileMenuOpen"
+                class="border-t border-black/10 bg-white/85 px-4 py-3 backdrop-blur-xl dark:border-white/10 dark:bg-black/70 md:hidden"
+            >
+                <nav class="grid gap-1">
+                    <Link class="site-nav-link" href="/" @click="closeMobileMenu"
+                        >Home</Link
+                    >
+                    <Link
+                        class="site-nav-link"
+                        href="/about"
+                        @click="closeMobileMenu"
+                        >About</Link
+                    >
+                    <Link
+                        class="site-nav-link"
+                        href="/projects"
+                        @click="closeMobileMenu"
+                        >Projects</Link
+                    >
+                    <Link
+                        class="site-nav-link"
+                        href="/blog"
+                        @click="closeMobileMenu"
+                        >Blog</Link
+                    >
+                    <Link
+                        class="site-nav-link"
+                        href="/activity"
+                        @click="closeMobileMenu"
+                        >Activity</Link
+                    >
+                </nav>
             </div>
         </header>
 

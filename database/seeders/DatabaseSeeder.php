@@ -11,6 +11,7 @@ use App\Models\Project;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -21,7 +22,11 @@ class DatabaseSeeder extends Seeder
     {
         $user = User::query()->updateOrCreate(
             ['email' => 'admin@example.com'],
-            ['name' => 'Makogai Admin'],
+            [
+                'name' => 'Makogai Admin',
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+            ],
         );
 
         if (PostCategory::query()->count() > 0 || PostTag::query()->count() > 0) {
