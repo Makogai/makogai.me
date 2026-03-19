@@ -12,21 +12,42 @@ class ProjectController extends Controller
 {
     public function index(Request $request): Response
     {
-        $projects = Project::query()
+        $query = Project::query()
             ->published()
-            ->latest('published_at')
-            ->get([
-                'id',
-                'title',
-                'slug',
-                'description',
-                'tech_stack',
-                'cover_image_path',
-                'repo_url',
-                'demo_url',
-                'is_featured',
-                'published_at',
-            ]);
+            ->latest('published_at');
+
+        $search = (string) $request->query('q', '');
+        $tech = (string) $request->query('tech', '');
+        $featuredFirst = (string) $request->query('featured', '') === '1';
+
+        if ($search !== '') {
+            $query->where(function ($q) use ($search): void {
+                $q->where('title', 'like', '%'.$search.'%')
+                    ->orWhere('description', 'like', '%'.$search.'%')
+                    ->orWhere('tech_stack', 'like', '%'.$search.'%');
+            });
+        }
+
+        if ($tech !== '') {
+            $query->whereJsonContains('tech_stack', $tech);
+        }
+
+        if ($featuredFirst) {
+            $query->orderByDesc('is_featured');
+        }
+
+        $projects = $query->get([
+            'id',
+            'title',
+            'slug',
+            'description',
+            'tech_stack',
+            'cover_image_path',
+            'repo_url',
+            'demo_url',
+            'is_featured',
+            'published_at',
+        ]);
 
         $siteSettings = $request->attributes->get('settings.site') ?? [];
 
@@ -35,6 +56,11 @@ class ProjectController extends Controller
 
         return Inertia::render('projects/Index', [
             'projects' => $projects,
+            'filters' => [
+                'q' => $search,
+                'tech' => $tech,
+                'featured' => $featuredFirst ? '1' : '0',
+            ],
             'meta' => [
                 'title' => $title.' – Projects',
                 'description' => $description,

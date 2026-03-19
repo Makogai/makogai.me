@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
+import { computed } from 'vue';
+import { router } from '@inertiajs/vue3';
 import SiteLayout from '@/layouts/SiteLayout.vue';
 
 type Tag = { id: number; name: string; slug: string };
@@ -24,12 +26,28 @@ function coverSrc(path: string | null): string | null {
     return `/storage/${path}`;
 }
 
-defineProps<{
+const props = defineProps<{
     posts: {
         data: Post[];
         links: { url: string | null; label: string; active: boolean }[];
     };
+    filters?: {
+        q?: string;
+        category?: string;
+        tag?: string;
+    };
 }>();
+
+const search = computed({
+    get: () => props.filters?.q ?? '',
+    set: (value: string) => {
+        router.get(
+            '/blog',
+            { ...props.filters, q: value || undefined },
+            { preserveState: true, replace: true },
+        );
+    },
+});
 </script>
 
 <template>
@@ -52,6 +70,14 @@ defineProps<{
                     Deep dives, notes, and experiments—written like shipping
                     logs.
                 </p>
+                <div class="mt-4 max-w-md">
+                    <input
+                        v-model="search"
+                        type="search"
+                        placeholder="Search posts…"
+                        class="h-10 w-full rounded-xl border border-black/10 bg-white/80 px-3 text-sm text-foreground ring-1 ring-black/10 backdrop-blur-xl placeholder:text-foreground/40 focus:ring-2 focus:ring-black/20 focus:outline-none dark:border-white/10 dark:bg-white/5 dark:ring-white/10 dark:focus:ring-white/15"
+                    />
+                </div>
             </div>
         </div>
 

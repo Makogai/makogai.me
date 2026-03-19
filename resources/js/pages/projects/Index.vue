@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { Head, Link, router } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import SiteLayout from '@/layouts/SiteLayout.vue';
 import * as simpleIcons from 'simple-icons';
 import {
@@ -26,9 +26,12 @@ type Project = {
 
 const props = defineProps<{
     projects: Project[];
+    filters?: {
+        q?: string;
+        tech?: string;
+        featured?: string;
+    };
 }>();
-
-const query = ref('');
 
 const technologies = computed(() => {
     const set = new Set<string>();
@@ -40,28 +43,49 @@ const technologies = computed(() => {
     return Array.from(set).sort((a, b) => a.localeCompare(b));
 });
 
-const activeTech = ref<string | null>(null);
-
-const filtered = computed(() => {
-    const q = query.value.trim().toLowerCase();
-
-    return props.projects.filter((p) => {
-        if (
-            activeTech.value &&
-            !(p.tech_stack ?? []).includes(activeTech.value)
-        ) {
-            return false;
-        }
-
-        if (!q) {
-            return true;
-        }
-
-        const haystack =
-            `${p.title} ${p.description ?? ''} ${(p.tech_stack ?? []).join(' ')}`.toLowerCase();
-        return haystack.includes(q);
-    });
+const activeTech = computed({
+    get: () => props.filters?.tech ?? null,
+    set: (value: string | null) => {
+        router.get(
+            '/projects',
+            {
+                ...props.filters,
+                tech: value || undefined,
+            },
+            { preserveState: true, replace: true },
+        );
+    },
 });
+
+const search = computed({
+    get: () => props.filters?.q ?? '',
+    set: (value: string) => {
+        router.get(
+            '/projects',
+            {
+                ...props.filters,
+                q: value || undefined,
+            },
+            { preserveState: true, replace: true },
+        );
+    },
+});
+
+const featuredFirst = computed({
+    get: () => (props.filters?.featured ?? '0') === '1',
+    set: (value: boolean) => {
+        router.get(
+            '/projects',
+            {
+                ...props.filters,
+                featured: value ? '1' : undefined,
+            },
+            { preserveState: true, replace: true },
+        );
+    },
+});
+
+const filtered = computed(() => props.projects);
 
 function techIcon(tech: string) {
     const t = tech.toLowerCase();
@@ -131,11 +155,19 @@ function techLogoSvg(tech: string): string | null {
 
                 <div class="flex items-center gap-2">
                     <input
-                        v-model="query"
+                        v-model="search"
                         type="search"
                         placeholder="Search…"
                         class="h-10 w-full min-w-[14rem] rounded-xl border border-black/10 bg-white/80 px-3 text-sm text-foreground ring-1 ring-black/10 backdrop-blur-xl placeholder:text-foreground/40 focus:ring-2 focus:ring-black/20 focus:outline-none dark:border-white/10 dark:bg-white/5 dark:ring-white/10 dark:focus:ring-white/15"
                     />
+                    <label class="inline-flex items-center gap-2 text-xs text-foreground/70">
+                        <input
+                            v-model="featuredFirst"
+                            type="checkbox"
+                            class="accent-black dark:accent-white"
+                        />
+                        Featured first
+                    </label>
                 </div>
             </div>
         </div>

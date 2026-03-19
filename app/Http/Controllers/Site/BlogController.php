@@ -12,10 +12,36 @@ class BlogController extends Controller
 {
     public function index(Request $request): Response
     {
-        $posts = Post::query()
+        $query = Post::query()
             ->published()
             ->latest('published_at')
-            ->with(['category:id,name,slug', 'tags:id,name,slug'])
+            ->with(['category:id,name,slug', 'tags:id,name,slug']);
+
+        $search = (string) $request->query('q', '');
+        $categorySlug = (string) $request->query('category', '');
+        $tagSlug = (string) $request->query('tag', '');
+
+        if ($search !== '') {
+            $query->where(function ($q) use ($search): void {
+                $q->where('title', 'like', '%'.$search.'%')
+                    ->orWhere('excerpt', 'like', '%'.$search.'%')
+                    ->orWhere('content_markdown', 'like', '%'.$search.'%');
+            });
+        }
+
+        if ($categorySlug !== '') {
+            $query->whereHas('category', function ($q) use ($categorySlug): void {
+                $q->where('slug', $categorySlug);
+            });
+        }
+
+        if ($tagSlug !== '') {
+            $query->whereHas('tags', function ($q) use ($tagSlug): void {
+                $q->where('slug', $tagSlug);
+            });
+        }
+
+        $posts = $query
             ->paginate(10, [
                 'id',
                 'title',
@@ -35,6 +61,11 @@ class BlogController extends Controller
 
         return Inertia::render('blog/Index', [
             'posts' => $posts,
+            'filters' => [
+                'q' => $search,
+                'category' => $categorySlug,
+                'tag' => $tagSlug,
+            ],
             'meta' => [
                 'title' => $title.' – Blog',
                 'description' => $description,
