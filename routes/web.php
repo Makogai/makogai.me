@@ -14,6 +14,8 @@ use App\Http\Controllers\Site\ActivityController;
 use App\Http\Controllers\Site\BlogController;
 use App\Http\Controllers\Site\HomeController;
 use App\Http\Controllers\Site\ProjectController;
+use App\Models\Post;
+use App\Models\Project;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class)->name('home');
@@ -27,6 +29,70 @@ Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{post}', [BlogController::class, 'show'])->name('blog.show');
 
 Route::get('/activity', [ActivityController::class, 'index'])->name('activity.index');
+
+Route::get('/rss.xml', function () {
+    $posts = Post::query()
+        ->published()
+        ->latest('published_at')
+        ->limit(30)
+        ->get(['title', 'slug', 'excerpt', 'published_at', 'updated_at']);
+
+    $xml = view('feeds.rss', [
+        'posts' => $posts,
+        'siteUrl' => url('/'),
+        'feedUrl' => url('/rss.xml'),
+    ])->render();
+
+    return response($xml, 200)->header('Content-Type', 'application/rss+xml; charset=UTF-8');
+})->name('rss');
+
+Route::get('/sitemap.xml', function () {
+    $staticUrls = [
+        ['loc' => url('/'), 'lastmod' => now()->toAtomString(), 'changefreq' => 'daily', 'priority' => '1.0'],
+        ['loc' => url('/about'), 'lastmod' => now()->toAtomString(), 'changefreq' => 'weekly', 'priority' => '0.8'],
+        ['loc' => url('/blog'), 'lastmod' => now()->toAtomString(), 'changefreq' => 'daily', 'priority' => '0.9'],
+        ['loc' => url('/projects'), 'lastmod' => now()->toAtomString(), 'changefreq' => 'weekly', 'priority' => '0.9'],
+        ['loc' => url('/activity'), 'lastmod' => now()->toAtomString(), 'changefreq' => 'daily', 'priority' => '0.7'],
+    ];
+
+    $postUrls = Post::query()
+        ->published()
+        ->latest('updated_at')
+        ->get(['slug', 'updated_at', 'published_at'])
+        ->map(fn (Post $post) => [
+            'loc' => url('/blog/'.$post->slug),
+            'lastmod' => ($post->updated_at ?? $post->published_at)?->toAtomString(),
+            'changefreq' => 'weekly',
+            'priority' => '0.7',
+        ]);
+
+    $projectUrls = Project::query()
+        ->published()
+        ->latest('updated_at')
+        ->get(['slug', 'updated_at', 'published_at'])
+        ->map(fn (Project $project) => [
+            'loc' => url('/projects/'.$project->slug),
+            'lastmod' => ($project->updated_at ?? $project->published_at)?->toAtomString(),
+            'changefreq' => 'weekly',
+            'priority' => '0.7',
+        ]);
+
+    $urls = collect($staticUrls)->concat($postUrls)->concat($projectUrls)->values();
+
+    $xml = view('feeds.sitemap', [
+        'urls' => $urls,
+    ])->render();
+
+    return response($xml, 200)->header('Content-Type', 'application/xml; charset=UTF-8');
+})->name('sitemap');
+
+Route::get('/robots.txt', function () {
+    $content = "User-agent: *\n";
+    $content .= "Allow: /\n";
+    $content .= 'Sitemap: '.url('/sitemap.xml')."\n";
+
+    return response($content, 200)->header('Content-Type', 'text/plain; charset=UTF-8');
+})->name('robots');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('dashboard', 'Dashboard')->name('dashboard');
