@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\ActivityController as AdminActivityController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\ExperienceController as AdminExperienceController;
+use App\Http\Controllers\Admin\LinkHealthController;
 use App\Http\Controllers\Admin\MarkdownPreviewController;
 use App\Http\Controllers\Admin\MediaController as AdminMediaController;
 use App\Http\Controllers\Admin\PostController as AdminPostController;
@@ -125,6 +126,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ]);
         Route::resource('activities', AdminActivityController::class);
         Route::resource('experience', AdminExperienceController::class);
+        Route::get('link-health', LinkHealthController::class)->name('link-health.index');
 
         Route::get('settings', [SettingController::class, 'edit'])->name('settings.edit');
         Route::put('settings', [SettingController::class, 'update'])->name('settings.update');

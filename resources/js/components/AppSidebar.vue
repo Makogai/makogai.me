@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
 import {
-    BookOpen,
     BriefcaseBusiness,
     CalendarDays,
+    ExternalLink,
     FileText,
     FolderGit2,
     LayoutGrid,
     Library,
+    Link2,
     Settings,
 } from 'lucide-vue-next';
 import AppLogo from '@/components/AppLogo.vue';
@@ -61,18 +62,23 @@ const mainNavItems: NavItem[] = [
         href: '/admin/media',
         icon: Library,
     },
+    {
+        title: 'Link Health',
+        href: '/admin/link-health',
+        icon: Link2,
+    },
 ];
 
 const footerNavItems: NavItem[] = [
     {
         title: 'Repository',
-        href: 'https://github.com/laravel/vue-starter-kit',
+        href: 'https://github.com/makogai/makogai.me',
         icon: FolderGit2,
     },
     {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#vue',
-        icon: BookOpen,
+        title: 'Open website',
+        href: '/',
+        icon: ExternalLink,
     },
 ];
 </script>
