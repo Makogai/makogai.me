@@ -17,6 +17,7 @@ const props = defineProps<{
         repo_url: string | null;
         demo_url: string | null;
         published_at: string | null;
+        archived_at: string | null;
         is_featured: boolean;
         seo_title: string | null;
         seo_description: string | null;
@@ -34,10 +35,43 @@ const form = useForm({
     repo_url: props.project?.repo_url ?? '',
     demo_url: props.project?.demo_url ?? '',
     published_at: props.project?.published_at ?? null,
+    archived_at: props.project?.archived_at ?? null,
     is_featured: props.project?.is_featured ?? false,
     seo_title: props.project?.seo_title ?? '',
     seo_description: props.project?.seo_description ?? '',
 });
+
+const status = computed<'draft' | 'published' | 'archived'>(() => {
+    if (form.archived_at) {
+        return 'archived';
+    }
+    if (form.published_at) {
+        return 'published';
+    }
+    return 'draft';
+});
+
+function toDatetimeLocal(value: Date): string {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}T${pad(
+        value.getHours(),
+    )}:${pad(value.getMinutes())}`;
+}
+
+function setDraft(): void {
+    form.published_at = null;
+    form.archived_at = null;
+}
+
+function setPublished(): void {
+    form.archived_at = null;
+    form.published_at = form.published_at ?? toDatetimeLocal(new Date());
+}
+
+function setArchived(): void {
+    form.archived_at = form.archived_at ?? toDatetimeLocal(new Date());
+    form.published_at = null;
+}
 
 const techCsv = ref((form.tech_stack ?? []).join(', '));
 watch(
@@ -176,10 +210,44 @@ function submit() {
                     <div
                         class="rounded-xl border border-sidebar-border/70 p-4 dark:border-sidebar-border"
                     >
-                        <label class="text-xs text-foreground/60"
-                            >Publish</label
-                        >
-                        <div class="mt-3 flex flex-wrap items-center gap-3">
+                        <label class="text-xs text-foreground/60">Status</label>
+                        <div class="mt-3 flex flex-wrap items-center gap-2">
+                            <span
+                                class="rounded-full px-2.5 py-1 text-xs ring-1"
+                                :class="[
+                                    status === 'draft'
+                                        ? 'bg-black/5 text-foreground/70 ring-black/10 dark:bg-white/5 dark:ring-white/10'
+                                        : status === 'published'
+                                          ? 'bg-emerald-500/10 text-emerald-700 ring-emerald-500/20 dark:text-emerald-300'
+                                          : 'bg-amber-500/10 text-amber-700 ring-amber-500/20 dark:text-amber-300',
+                                ]"
+                            >
+                                {{ status }}
+                            </span>
+                            <button
+                                type="button"
+                                class="site-nav-link px-3 py-2 text-xs"
+                                @click="setDraft"
+                            >
+                                Draft
+                            </button>
+                            <button
+                                type="button"
+                                class="glass-button px-3 py-2 text-xs"
+                                @click="setPublished"
+                            >
+                                Publish
+                            </button>
+                            <button
+                                type="button"
+                                class="site-nav-link px-3 py-2 text-xs"
+                                @click="setArchived"
+                            >
+                                Archive
+                            </button>
+                        </div>
+
+                        <div class="mt-4 flex flex-wrap items-center gap-3">
                             <label
                                 class="inline-flex items-center gap-2 text-sm"
                             >
@@ -193,8 +261,10 @@ function submit() {
                             <input
                                 v-model="form.published_at"
                                 type="datetime-local"
+                                :disabled="status === 'archived'"
                                 class="h-10 rounded-xl border border-white/10 bg-white/5 px-3 text-sm ring-1 ring-white/10"
                             />
+                            <input v-model="form.archived_at" type="hidden" />
                         </div>
                     </div>
                 </div>

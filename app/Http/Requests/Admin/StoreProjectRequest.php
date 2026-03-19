@@ -33,6 +33,7 @@ class StoreProjectRequest extends FormRequest
             'demo_url' => ['nullable', 'url'],
             'is_featured' => ['sometimes', 'boolean'],
             'published_at' => ['nullable', 'date'],
+            'archived_at' => ['nullable', 'date'],
             'seo_title' => ['nullable', 'string', 'max:255'],
             'seo_description' => ['nullable', 'string', 'max:280'],
         ];

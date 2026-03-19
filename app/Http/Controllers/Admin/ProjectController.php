@@ -24,6 +24,7 @@ class ProjectController extends Controller
                 'title',
                 'slug',
                 'published_at',
+                'archived_at',
                 'is_featured',
                 'updated_at',
             ])
@@ -81,6 +82,7 @@ class ProjectController extends Controller
                 'repo_url',
                 'demo_url',
                 'published_at',
+                'archived_at',
                 'is_featured',
                 'seo_title',
                 'seo_description',

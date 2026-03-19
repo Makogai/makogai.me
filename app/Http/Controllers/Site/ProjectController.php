@@ -35,7 +35,7 @@ class ProjectController extends Controller
 
     public function show(Project $project): Response
     {
-        abort_unless($project->published_at, 404);
+        abort_unless($project->published_at && ! $project->archived_at, 404);
 
         return Inertia::render('projects/Show', [
             'project' => $project->only([

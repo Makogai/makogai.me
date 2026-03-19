@@ -10,29 +10,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-#[Fillable([
-    'user_id',
-    'title',
-    'slug',
-    'description',
-    'content_markdown',
-    'content_html',
-    'cover_image_path',
-    'gallery',
-    'tech_stack',
-    'repo_url',
-    'demo_url',
-    'is_featured',
-    'published_at',
-    'seo_title',
-    'seo_description',
-])]
 class Project extends Model
 {
     /** @use HasFactory<ProjectFactory> */
     use HasFactory, SoftDeletes;
 
-    protected $fillable = [
+    #[Fillable([
         'user_id',
         'title',
         'slug',
@@ -40,7 +23,17 @@ class Project extends Model
         'content_markdown',
         'content_html',
         'cover_image_path',
-    ];
+        'gallery',
+        'tech_stack',
+        'repo_url',
+        'demo_url',
+        'is_featured',
+        'published_at',
+        'archived_at',
+        'seo_title',
+        'seo_description',
+    ])]
+    protected $fillable;
 
     /**
      * @return BelongsTo<User, $this>
@@ -52,7 +45,9 @@ class Project extends Model
 
     public function scopePublished(Builder $query): Builder
     {
-        return $query->whereNotNull('published_at')->where('published_at', '<=', now());
+        return $query
+            ->whereNull('archived_at')
+            ->whereNotNull('published_at');
     }
 
     /**
@@ -65,6 +60,7 @@ class Project extends Model
             'tech_stack' => 'array',
             'is_featured' => 'bool',
             'published_at' => 'datetime',
+            'archived_at' => 'datetime',
         ];
     }
 

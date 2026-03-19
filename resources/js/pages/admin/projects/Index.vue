@@ -10,6 +10,7 @@ defineProps<{
             title: string;
             slug: string;
             published_at: string | null;
+            archived_at: string | null;
             is_featured: boolean;
             updated_at: string;
         }[];
@@ -72,15 +73,19 @@ const breadcrumbs: BreadcrumbItem[] = [
                                 <span
                                     class="rounded-full px-2.5 py-1 text-xs ring-1"
                                     :class="
-                                        project.published_at
-                                            ? 'bg-emerald-500/10 text-emerald-200 ring-emerald-500/20'
-                                            : 'bg-white/5 text-foreground/70 ring-white/10'
+                                        project.archived_at
+                                            ? 'bg-amber-500/10 text-amber-200 ring-amber-500/20'
+                                            : project.published_at
+                                              ? 'bg-emerald-500/10 text-emerald-200 ring-emerald-500/20'
+                                              : 'bg-white/5 text-foreground/70 ring-white/10'
                                     "
                                 >
                                     {{
-                                        project.published_at
-                                            ? 'Published'
-                                            : 'Draft'
+                                        project.archived_at
+                                            ? 'Archived'
+                                            : project.published_at
+                                              ? 'Published'
+                                              : 'Draft'
                                     }}
                                 </span>
                                 <span
