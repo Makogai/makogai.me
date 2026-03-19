@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
+import MediaPickerDialog from '@/components/admin/MediaPickerDialog.vue';
 
 const props = defineProps<{
     site: {
@@ -45,23 +46,66 @@ const mediaForm = useForm({
     cover: null as File | null,
 });
 
+const pickOpen = ref(false);
+const pickTarget = ref<'portrait_light_path' | 'portrait_dark_path' | 'cover_path'>(
+    'portrait_light_path',
+);
+
+const profileMediaPathsForm = useForm({
+    portrait_light_path: props.profile.portrait_light_path,
+    portrait_dark_path: props.profile.portrait_dark_path,
+    cover_path: props.profile.cover_path,
+});
+
+const currentProfile = computed(() => {
+    const p = usePage().props.profile as any;
+    return (p ?? props.profile) as typeof props.profile;
+});
+
 const preview = computed(() => ({
     portrait_light: mediaForm.portrait_light
         ? URL.createObjectURL(mediaForm.portrait_light)
-        : props.profile.portrait_light_path
-          ? `/storage/${props.profile.portrait_light_path}`
+        : profileMediaPathsForm.portrait_light_path || currentProfile.value.portrait_light_path
+          ? `/storage/${
+                profileMediaPathsForm.portrait_light_path ??
+                currentProfile.value.portrait_light_path
+            }`
           : null,
     portrait_dark: mediaForm.portrait_dark
         ? URL.createObjectURL(mediaForm.portrait_dark)
-        : props.profile.portrait_dark_path
-          ? `/storage/${props.profile.portrait_dark_path}`
+        : profileMediaPathsForm.portrait_dark_path || currentProfile.value.portrait_dark_path
+          ? `/storage/${
+                profileMediaPathsForm.portrait_dark_path ??
+                currentProfile.value.portrait_dark_path
+            }`
           : null,
     cover: mediaForm.cover
         ? URL.createObjectURL(mediaForm.cover)
-        : props.profile.cover_path
-          ? `/storage/${props.profile.cover_path}`
+        : profileMediaPathsForm.cover_path || currentProfile.value.cover_path
+          ? `/storage/${
+                profileMediaPathsForm.cover_path ?? currentProfile.value.cover_path
+            }`
           : null,
 }));
+
+function openPicker(target: typeof pickTarget.value) {
+    pickTarget.value = target;
+    pickOpen.value = true;
+}
+
+function onPick(item: { path: string }) {
+    (profileMediaPathsForm as any)[pickTarget.value] = item.path;
+    profileMediaPathsForm.put('/admin/settings/profile', {
+        preserveScroll: true,
+        onSuccess: () => {
+            // Keep local form in sync with saved server state
+            const p = currentProfile.value;
+            profileMediaPathsForm.portrait_light_path = p.portrait_light_path;
+            profileMediaPathsForm.portrait_dark_path = p.portrait_dark_path;
+            profileMediaPathsForm.cover_path = p.cover_path;
+        },
+    });
+}
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Admin', href: '/admin' },
@@ -269,6 +313,13 @@ const breadcrumbs: BreadcrumbItem[] = [
                                                 .files?.[0] ?? null)
                                 "
                             />
+                            <button
+                                type="button"
+                                class="site-nav-link mt-3 w-full justify-center px-3 py-2 text-xs"
+                                @click="openPicker('portrait_light_path')"
+                            >
+                                Pick from library
+                            </button>
                         </div>
 
                         <div
@@ -297,6 +348,13 @@ const breadcrumbs: BreadcrumbItem[] = [
                                                 .files?.[0] ?? null)
                                 "
                             />
+                            <button
+                                type="button"
+                                class="site-nav-link mt-3 w-full justify-center px-3 py-2 text-xs"
+                                @click="openPicker('portrait_dark_path')"
+                            >
+                                Pick from library
+                            </button>
                         </div>
 
                         <div
@@ -323,6 +381,13 @@ const breadcrumbs: BreadcrumbItem[] = [
                                                 .files?.[0] ?? null)
                                 "
                             />
+                            <button
+                                type="button"
+                                class="site-nav-link mt-3 w-full justify-center px-3 py-2 text-xs"
+                                @click="openPicker('cover_path')"
+                            >
+                                Pick from library
+                            </button>
                         </div>
                     </div>
 
@@ -342,5 +407,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                 </form>
             </div>
         </div>
+
+        <MediaPickerDialog v-model:open="pickOpen" @select="onPick" />
     </AppLayout>
 </template>

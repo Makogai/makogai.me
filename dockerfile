@@ -37,6 +37,6 @@ CMD php artisan config:clear \
  && php artisan storage:link --relative || true \
  && chown -R www-data:www-data /var/www/storage /var/www/public/storage || true \
  && php artisan migrate --force \
- && php artisan db:seed --force \
+ && if [ "${APP_SEED_ON_DEPLOY:-0}" = "1" ]; then php artisan db:seed --force --no-interaction; else echo "Skipping db:seed (set APP_SEED_ON_DEPLOY=1 to enable)"; fi \
  && service nginx start \
  && php-fpm -F

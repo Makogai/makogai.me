@@ -26,6 +26,9 @@ class UpdateProfileRequest extends FormRequest
             'full_name' => ['nullable', 'string', 'max:80'],
             'headline' => ['nullable', 'string', 'max:120'],
             'bio' => ['nullable', 'string', 'max:500'],
+            'portrait_light_path' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'portrait_dark_path' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'cover_path' => ['sometimes', 'nullable', 'string', 'max:255'],
         ];
     }
 }

@@ -42,6 +42,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('media', [AdminMediaController::class, 'index'])->name('media.index');
         Route::post('media', [AdminMediaController::class, 'store'])->name('media.store');
         Route::get('media/library', [AdminMediaController::class, 'library'])->name('media.library');
+        Route::get('media/{media}/usage', [AdminMediaController::class, 'usage'])->name('media.usage');
         Route::delete('media/{media}', [AdminMediaController::class, 'destroy'])->name('media.destroy');
 
         Route::resource('posts', AdminPostController::class)->scoped([

@@ -3,6 +3,12 @@ import { Head, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 
 const props = defineProps<{
     media: {
@@ -58,6 +64,30 @@ async function copyUrl(url: string, id: number) {
     }
     copied.value = id;
     window.setTimeout(() => (copied.value = null), 900);
+}
+
+type UsageItem = { type: string; label: string; url: string };
+const usageOpen = ref(false);
+const usageLoading = ref(false);
+const usageFor = ref<{ id: number; path: string } | null>(null);
+const usageItems = ref<UsageItem[]>([]);
+
+async function openUsage(m: { id: number; path: string }) {
+    usageOpen.value = true;
+    usageLoading.value = true;
+    usageFor.value = { id: m.id, path: m.path };
+    usageItems.value = [];
+
+    try {
+        const res = await fetch(`/admin/media/${m.id}/usage`, {
+            credentials: 'same-origin',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        });
+        const json = (await res.json()) as { items: UsageItem[] };
+        usageItems.value = json.items ?? [];
+    } finally {
+        usageLoading.value = false;
+    }
 }
 </script>
 
@@ -177,6 +207,13 @@ async function copyUrl(url: string, id: number) {
                             >
                                 Delete
                             </button>
+                            <button
+                                type="button"
+                                class="site-nav-link px-3 py-2 text-xs"
+                                @click="openUsage(m)"
+                            >
+                                Usage
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -197,5 +234,42 @@ async function copyUrl(url: string, id: number) {
                 />
             </nav>
         </div>
+
+        <Dialog v-model:open="usageOpen">
+            <DialogContent class="max-w-2xl">
+                <DialogHeader>
+                    <DialogTitle>Used in</DialogTitle>
+                </DialogHeader>
+
+                <div class="text-xs text-foreground/60">
+                    {{ usageFor?.path }}
+                </div>
+
+                <div v-if="usageLoading" class="mt-3 text-sm text-foreground/60">
+                    Loading…
+                </div>
+
+                <div
+                    v-else-if="usageItems.length === 0"
+                    class="mt-3 text-sm text-foreground/60"
+                >
+                    Not referenced anywhere yet.
+                </div>
+
+                <div v-else class="mt-3 grid gap-2">
+                    <a
+                        v-for="(u, idx) in usageItems"
+                        :key="`${u.type}-${idx}`"
+                        :href="u.url"
+                        class="rounded-xl border border-black/10 bg-white/70 px-3 py-2 text-sm text-foreground ring-1 ring-black/10 hover:bg-white/80 dark:border-white/10 dark:bg-white/5 dark:ring-white/10 dark:hover:bg-white/8"
+                    >
+                        <div class="text-[0.7rem] uppercase tracking-wide text-foreground/55">
+                            {{ u.type }}
+                        </div>
+                        <div class="mt-0.5">{{ u.label }}</div>
+                    </a>
+                </div>
+            </DialogContent>
+        </Dialog>
     </AppLayout>
 </template>
