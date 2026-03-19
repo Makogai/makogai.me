@@ -11,22 +11,35 @@ import {
     Terminal,
 } from 'lucide-vue-next';
 
-defineProps<{
-    project: {
-        id: number;
-        title: string;
-        slug: string;
-        description: string | null;
-        content_html: string | null;
-        cover_image_path: string | null;
-        gallery: string[] | null;
-        tech_stack: string[] | null;
-        repo_url: string | null;
-        demo_url: string | null;
-        published_at: string;
-        seo_title: string | null;
-        seo_description: string | null;
-    };
+type Project = {
+    id: number;
+    title: string;
+    slug: string;
+    description: string | null;
+    content_html: string | null;
+    cover_image_path: string | null;
+    gallery: string[] | null;
+    tech_stack: string[] | null;
+    repo_url: string | null;
+    demo_url: string | null;
+    published_at: string;
+    seo_title: string | null;
+    seo_description: string | null;
+};
+
+type RelatedProject = {
+    id: number;
+    title: string;
+    slug: string;
+    description: string | null;
+    tech_stack: string[] | null;
+    cover_image_path: string | null;
+    published_at: string;
+};
+
+const props = defineProps<{
+    project: Project;
+    related?: RelatedProject[];
 }>();
 
 function techIcon(tech: string) {
@@ -171,6 +184,53 @@ function techLogoSvg(tech: string): string | null {
                     </div>
                 </article>
             </div>
+
+            <section
+                v-if="related && related.length"
+                class="mt-10 rounded-3xl border border-black/10 bg-white/70 p-6 ring-1 ring-black/10 backdrop-blur-xl dark:border-white/10 dark:bg-white/5 dark:ring-white/10"
+            >
+                <h2 class="text-sm font-medium tracking-tight">
+                    Related projects
+                </h2>
+                <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                    <Link
+                        v-for="r in related"
+                        :key="r.id"
+                        :href="`/projects/${r.slug}`"
+                        class="group rounded-2xl border border-black/10 bg-white/80 p-4 ring-1 ring-black/10 backdrop-blur transition hover:bg-white/95 dark:border-white/10 dark:bg-white/5 dark:ring-white/10 dark:hover:bg-white/8"
+                    >
+                        <div class="flex items-start justify-between gap-3">
+                            <h3 class="text-sm font-medium tracking-tight">
+                                {{ r.title }}
+                            </h3>
+                            <span class="text-xs text-foreground/55">→</span>
+                        </div>
+                        <p
+                            v-if="r.description"
+                            class="mt-2 line-clamp-2 text-xs text-foreground/65"
+                        >
+                            {{ r.description }}
+                        </p>
+                        <div
+                            v-if="r.tech_stack?.length"
+                            class="mt-3 flex flex-wrap gap-1 text-[0.7rem] text-foreground/60"
+                        >
+                            <span
+                                v-for="tech in r.tech_stack.slice(0, 3)"
+                                :key="tech"
+                                class="rounded-full bg-white/80 px-2 py-0.5 ring-1 ring-black/10 dark:bg-white/5 dark:ring-white/10"
+                            >
+                                {{ tech }}
+                            </span>
+                        </div>
+                        <div class="mt-3 text-[0.7rem] text-foreground/55">
+                            {{
+                                new Date(r.published_at).toLocaleDateString()
+                            }}
+                        </div>
+                    </Link>
+                </div>
+            </section>
         </div>
     </SiteLayout>
 </template>

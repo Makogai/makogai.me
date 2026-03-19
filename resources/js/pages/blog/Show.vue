@@ -1,10 +1,19 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
-import { nextTick, onMounted, ref, toRefs, watch } from 'vue';
+import { Head, Link, usePage } from '@inertiajs/vue3';
+import { computed, nextTick, onMounted, ref, toRefs, watch } from 'vue';
 import SiteLayout from '@/layouts/SiteLayout.vue';
 
 type Tag = { id: number; name: string; slug: string };
 type Category = { id: number; name: string; slug: string } | null;
+
+type RelatedPost = {
+    id: number;
+    title: string;
+    slug: string;
+    excerpt: string | null;
+    cover_image_path: string | null;
+    published_at: string;
+};
 
 const props = defineProps<{
     post: {
@@ -22,9 +31,11 @@ const props = defineProps<{
         category: Category;
         tags: Tag[];
     };
+    related?: RelatedPost[];
 }>();
 
 const { post } = toRefs(props);
+const page = usePage();
 
 function coverSrc(path: string | null): string | null {
     if (!path) return null;
@@ -35,6 +46,34 @@ function coverSrc(path: string | null): string | null {
 
 const contentRef = ref<HTMLElement | null>(null);
 let prismInitPromise: Promise<void> | null = null;
+
+const shareCopied = ref(false);
+const shareUrl = computed(() => {
+    if (typeof window !== 'undefined' && window.location?.href) {
+        return window.location.href;
+    }
+    return page.url ? `${page.url}` : '';
+});
+const twitterShareUrl = computed(
+    () =>
+        `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl.value)}&text=${encodeURIComponent(post.value.title)}`,
+);
+const linkedinShareUrl = computed(
+    () =>
+        `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl.value)}`,
+);
+
+async function copyShareUrl(): Promise<void> {
+    try {
+        await copyTextToClipboard(shareUrl.value);
+        shareCopied.value = true;
+        window.setTimeout(() => {
+            shareCopied.value = false;
+        }, 1200);
+    } catch {
+        // Ignore
+    }
+}
 
 async function copyTextToClipboard(text: string): Promise<void> {
     // Best-effort: try Clipboard API first, fallback to a textarea copy.
@@ -277,6 +316,32 @@ watch(
                     <span>{{ post.reading_time_minutes }} min read</span>
                 </div>
 
+                <div class="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                    <button
+                        type="button"
+                        class="site-nav-link px-3 py-1.5 text-xs"
+                        @click="copyShareUrl"
+                    >
+                        {{ shareCopied ? 'Link copied' : 'Copy link' }}
+                    </button>
+                    <a
+                        :href="twitterShareUrl"
+                        target="_blank"
+                        rel="noreferrer"
+                        class="site-nav-link px-3 py-1.5 text-xs"
+                    >
+                        Share on X
+                    </a>
+                    <a
+                        :href="linkedinShareUrl"
+                        target="_blank"
+                        rel="noreferrer"
+                        class="site-nav-link px-3 py-1.5 text-xs"
+                    >
+                        Share on LinkedIn
+                    </a>
+                </div>
+
                 <h1
                     class="mt-4 text-3xl font-semibold tracking-tight sm:text-5xl"
                 >
@@ -323,6 +388,39 @@ watch(
                     </div>
                 </article>
             </div>
+
+            <section
+                v-if="related && related.length"
+                class="mt-10 rounded-3xl border border-black/10 bg-white/70 p-6 ring-1 ring-black/10 backdrop-blur-xl dark:border-white/10 dark:bg-white/5 dark:ring-white/10"
+            >
+                <h2 class="text-sm font-medium tracking-tight">Related posts</h2>
+                <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                    <Link
+                        v-for="r in related"
+                        :key="r.id"
+                        :href="`/blog/${r.slug}`"
+                        class="group rounded-2xl border border-black/10 bg-white/80 p-4 ring-1 ring-black/10 backdrop-blur transition hover:bg-white/95 dark:border-white/10 dark:bg-white/5 dark:ring-white/10 dark:hover:bg-white/8"
+                    >
+                        <div class="flex items-start justify-between gap-3">
+                            <h3 class="text-sm font-medium tracking-tight">
+                                {{ r.title }}
+                            </h3>
+                            <span class="text-xs text-foreground/55">→</span>
+                        </div>
+                        <p
+                            v-if="r.excerpt"
+                            class="mt-2 line-clamp-2 text-xs text-foreground/65"
+                        >
+                            {{ r.excerpt }}
+                        </p>
+                        <div class="mt-3 text-[0.7rem] text-foreground/55">
+                            {{
+                                new Date(r.published_at).toLocaleDateString()
+                            }}
+                        </div>
+                    </Link>
+                </div>
+            </section>
         </div>
     </SiteLayout>
 </template>

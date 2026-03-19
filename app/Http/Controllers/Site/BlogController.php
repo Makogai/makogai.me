@@ -81,6 +81,30 @@ class BlogController extends Controller
 
         $post->loadMissing(['category:id,name,slug', 'tags:id,name,slug']);
 
+        $related = Post::query()
+            ->published()
+            ->where('id', '!=', $post->id)
+            ->when(
+                $post->category,
+                fn ($q) => $q->where('category_id', $post->category_id),
+            )
+            ->when(
+                $post->tags?->count(),
+                fn ($q) => $q->orWhereHas('tags', function ($t) use ($post): void {
+                    $t->whereIn('post_tags.id', $post->tags->pluck('id'));
+                }),
+            )
+            ->latest('published_at')
+            ->limit(4)
+            ->get([
+                'id',
+                'title',
+                'slug',
+                'excerpt',
+                'cover_image_path',
+                'published_at',
+            ]);
+
         $siteSettings = request()->attributes->get('settings.site') ?? [];
 
         $title = $post->seo_title ?: ($post->title.' – Blog');
@@ -103,6 +127,7 @@ class BlogController extends Controller
                 'category' => $post->category,
                 'tags' => $post->tags,
             ],
+            'related' => $related,
             'meta' => [
                 'title' => $title,
                 'description' => $description,

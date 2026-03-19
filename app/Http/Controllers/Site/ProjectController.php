@@ -74,6 +74,25 @@ class ProjectController extends Controller
     {
         abort_unless($project->published_at && ! $project->archived_at, 404);
 
+        $related = Project::query()
+            ->published()
+            ->where('id', '!=', $project->id)
+            ->when(
+                $project->tech_stack,
+                fn ($q) => $q->whereJsonOverlap('tech_stack', $project->tech_stack),
+            )
+            ->latest('published_at')
+            ->limit(4)
+            ->get([
+                'id',
+                'title',
+                'slug',
+                'description',
+                'tech_stack',
+                'cover_image_path',
+                'published_at',
+            ]);
+
         $siteSettings = request()->attributes->get('settings.site') ?? [];
 
         $title = $project->seo_title ?: ($project->title.' – Project');
@@ -95,6 +114,7 @@ class ProjectController extends Controller
                 'seo_title',
                 'seo_description',
             ]),
+            'related' => $related,
             'meta' => [
                 'title' => $title,
                 'description' => $description,
