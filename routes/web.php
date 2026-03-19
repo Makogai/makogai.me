@@ -22,11 +22,17 @@ Route::get('/', HomeController::class)->name('home');
 
 Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');
 Route::get('/projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
+Route::get('/preview/projects/{project}', [ProjectController::class, 'preview'])
+    ->middleware('signed')
+    ->name('projects.preview');
 
 Route::get('/about', AboutController::class)->name('about');
 
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{post}', [BlogController::class, 'show'])->name('blog.show');
+Route::get('/preview/blog/{post}', [BlogController::class, 'preview'])
+    ->middleware('signed')
+    ->name('blog.preview');
 
 Route::get('/activity', [ActivityController::class, 'index'])->name('activity.index');
 

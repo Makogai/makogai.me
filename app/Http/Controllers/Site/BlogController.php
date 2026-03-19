@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Site;
 
 use App\Http\Controllers\Controller;
 use App\Models\Post;
+use App\Services\Content\MarkdownService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -75,9 +76,26 @@ class BlogController extends Controller
         ]);
     }
 
-    public function show(Post $post): Response
+    public function show(Post $post, MarkdownService $markdown): Response
     {
         abort_unless($post->published_at && ! $post->archived_at, 404);
+
+        // Backfill older compiled HTML so new shortcodes render on live pages too.
+        if (
+            str_contains((string) $post->content_markdown, ':::')
+            && (
+                blank($post->content_html)
+                || str_contains((string) $post->content_html, ':::')
+                || str_contains((string) $post->content_html, '[!NOTE]')
+                || str_contains((string) $post->content_html, '[!TIP]')
+                || str_contains((string) $post->content_html, '[!WARNING]')
+                || str_contains((string) $post->content_html, '[!SUCCESS]')
+            )
+        ) {
+            $post->forceFill([
+                'content_html' => $markdown->renderToHtml((string) $post->content_markdown),
+            ])->saveQuietly();
+        }
 
         $post->loadMissing(['category:id,name,slug', 'tags:id,name,slug']);
 
@@ -133,6 +151,40 @@ class BlogController extends Controller
                 'description' => $description,
                 'type' => 'article',
                 'image_path' => $post->cover_image_path ?: ($siteSettings['default_og_image_path'] ?? null),
+            ],
+        ]);
+    }
+
+    public function preview(Post $post, Request $request, MarkdownService $markdown): Response
+    {
+        abort_unless($request->hasValidSignature(), 403);
+
+        $post->loadMissing(['category:id,name,slug', 'tags:id,name,slug']);
+
+        return Inertia::render('blog/Show', [
+            'post' => $post->only([
+                'id',
+                'title',
+                'slug',
+                'excerpt',
+                'reading_time_minutes',
+                'cover_image_path',
+                'content_html',
+                'published_at',
+                'seo_title',
+                'seo_description',
+                'syntax_highlighting_enabled',
+            ]) + [
+                'category' => $post->category,
+                'tags' => $post->tags,
+                'content_html' => $markdown->renderToHtml((string) $post->content_markdown),
+            ],
+            'related' => [],
+            'meta' => [
+                'title' => '[Preview] '.($post->seo_title ?: $post->title),
+                'description' => $post->seo_description ?: $post->excerpt,
+                'type' => 'article',
+                'image_path' => $post->cover_image_path,
             ],
         ]);
     }

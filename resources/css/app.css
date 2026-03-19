@@ -230,6 +230,39 @@
         @apply dark:border-white/10 dark:bg-white/5 dark:ring-white/10;
     }
 
+    .prose :where(blockquote.callout) {
+        @apply mt-4 border-l-[3px] rounded-xl p-3;
+    }
+
+    .prose :where(blockquote.callout .callout-title) {
+        @apply m-0 mb-1 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-foreground/70;
+    }
+
+    .prose :where(blockquote.callout p) {
+        @apply mt-1 text-[0.94rem] leading-relaxed;
+    }
+
+    .prose :where(blockquote.callout p:last-child) {
+        @apply mb-0;
+    }
+
+    .prose :where(blockquote.callout.callout-note) {
+        @apply border-l-indigo-500 bg-indigo-50/55 ring-indigo-500/15;
+        @apply dark:border-l-indigo-400 dark:bg-indigo-500/8 dark:ring-indigo-400/25;
+    }
+    .prose :where(blockquote.callout.callout-tip) {
+        @apply border-l-cyan-500 bg-cyan-50/55 ring-cyan-500/15;
+        @apply dark:border-l-cyan-400 dark:bg-cyan-500/8 dark:ring-cyan-400/25;
+    }
+    .prose :where(blockquote.callout.callout-warning) {
+        @apply border-l-amber-500 bg-amber-50/55 ring-amber-500/15;
+        @apply dark:border-l-amber-400 dark:bg-amber-500/8 dark:ring-amber-400/25;
+    }
+    .prose :where(blockquote.callout.callout-success) {
+        @apply border-l-emerald-500 bg-emerald-50/55 ring-emerald-500/15;
+        @apply dark:border-l-emerald-400 dark:bg-emerald-500/8 dark:ring-emerald-400/25;
+    }
+
     .prose :where(ul) {
         @apply mt-4 list-disc pl-6;
     }

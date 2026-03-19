@@ -11,6 +11,7 @@ use App\Models\PostTag;
 use App\Services\Media\MediaLibrary;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\URL;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -104,6 +105,11 @@ class PostController extends Controller
                 'seo_description',
             ]) + [
                 'tag_ids' => $post->tags->pluck('id')->all(),
+                'preview_url' => URL::temporarySignedRoute(
+                    'blog.preview',
+                    now()->addHours(8),
+                    ['post' => $post],
+                ),
             ],
             'categories' => PostCategory::query()->orderBy('name')->get(['id', 'name']),
             'tags' => PostTag::query()->orderBy('name')->get(['id', 'name']),

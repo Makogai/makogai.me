@@ -21,6 +21,7 @@ const props = defineProps<{
         is_featured: boolean;
         seo_title: string | null;
         seo_description: string | null;
+        preview_url?: string | null;
     };
 }>();
 
@@ -142,7 +143,18 @@ function submit() {
                         Markdown write-up + structured metadata.
                     </p>
                 </div>
-                <Link href="/admin/projects" class="site-nav-link">Back</Link>
+                <div class="flex items-center gap-2">
+                    <Link href="/admin/projects" class="site-nav-link">Back</Link>
+                    <a
+                        v-if="isEdit && props.project?.preview_url"
+                        :href="props.project.preview_url"
+                        target="_blank"
+                        rel="noreferrer"
+                        class="glass-button"
+                    >
+                        Preview draft
+                    </a>
+                </div>
             </div>
 
             <form class="grid gap-4 lg:grid-cols-2" @submit.prevent="submit">

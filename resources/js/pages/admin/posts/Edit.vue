@@ -26,6 +26,7 @@ const props = defineProps<{
         cover_image_path?: string | null;
         seo_title: string | null;
         seo_description: string | null;
+        preview_url?: string | null;
     };
     categories: Category[];
     tags: Tag[];
@@ -159,6 +160,15 @@ function submit() {
                     </p>
                 </div>
                 <Link href="/admin/posts" class="site-nav-link"> Back </Link>
+                <a
+                    v-if="isEdit && props.post?.preview_url"
+                    :href="props.post.preview_url"
+                    target="_blank"
+                    rel="noreferrer"
+                    class="glass-button"
+                >
+                    Preview draft
+                </a>
             </div>
 
             <form class="grid gap-4 lg:grid-cols-2" @submit.prevent="submit">

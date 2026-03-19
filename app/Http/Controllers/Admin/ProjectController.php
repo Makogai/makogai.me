@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\StoreProjectRequest;
 use App\Http\Requests\Admin\UpdateProjectRequest;
 use App\Models\Project;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\URL;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -86,7 +87,13 @@ class ProjectController extends Controller
                 'is_featured',
                 'seo_title',
                 'seo_description',
-            ]),
+            ]) + [
+                'preview_url' => URL::temporarySignedRoute(
+                    'projects.preview',
+                    now()->addHours(8),
+                    ['project' => $project],
+                ),
+            ],
         ]);
     }
 

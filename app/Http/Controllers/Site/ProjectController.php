@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Site;
 
 use App\Http\Controllers\Controller;
 use App\Models\Project;
+use App\Services\Content\MarkdownService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -70,9 +71,25 @@ class ProjectController extends Controller
         ]);
     }
 
-    public function show(Project $project): Response
+    public function show(Project $project, MarkdownService $markdown): Response
     {
         abort_unless($project->published_at && ! $project->archived_at, 404);
+
+        if (
+            str_contains((string) $project->content_markdown, ':::')
+            && (
+                blank($project->content_html)
+                || str_contains((string) $project->content_html, ':::')
+                || str_contains((string) $project->content_html, '[!NOTE]')
+                || str_contains((string) $project->content_html, '[!TIP]')
+                || str_contains((string) $project->content_html, '[!WARNING]')
+                || str_contains((string) $project->content_html, '[!SUCCESS]')
+            )
+        ) {
+            $project->forceFill([
+                'content_html' => $markdown->renderToHtml((string) $project->content_markdown),
+            ])->saveQuietly();
+        }
 
         $related = Project::query()
             ->published()
@@ -120,6 +137,37 @@ class ProjectController extends Controller
                 'description' => $description,
                 'type' => 'article',
                 'image_path' => $project->cover_image_path ?: ($siteSettings['default_og_image_path'] ?? null),
+            ],
+        ]);
+    }
+
+    public function preview(Project $project, Request $request, MarkdownService $markdown): Response
+    {
+        abort_unless($request->hasValidSignature(), 403);
+
+        return Inertia::render('projects/Show', [
+            'project' => $project->only([
+                'id',
+                'title',
+                'slug',
+                'description',
+                'cover_image_path',
+                'gallery',
+                'tech_stack',
+                'repo_url',
+                'demo_url',
+                'published_at',
+                'seo_title',
+                'seo_description',
+            ]) + [
+                'content_html' => $markdown->renderToHtml((string) $project->content_markdown),
+            ],
+            'related' => [],
+            'meta' => [
+                'title' => '[Preview] '.($project->seo_title ?: $project->title),
+                'description' => $project->seo_description ?: $project->description,
+                'type' => 'article',
+                'image_path' => $project->cover_image_path,
             ],
         ]);
     }
